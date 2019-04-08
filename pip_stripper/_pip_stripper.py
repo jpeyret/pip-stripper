@@ -17,9 +17,9 @@ import os
 from traceback import print_exc as xp
 import pdb
 
-from pip_stripper._baseutils import set_cpdb, set_rpdb, ppp, debugObject, cpdb
+from pip_stripper._baseutils import set_cpdb, set_rpdb, ppp, debugObject, cpdb, fill_template
 
-from yaml import safe_load as yload
+from yaml import safe_load as yload, dump
 
 
 if __name__ == "__main__":
@@ -34,18 +34,22 @@ class Main(object):
     def __repr__(self):
         return self.__class__.__name__
 
+
     def __init__(self, options):
 
         self.options = options
 
         pwd = os.getcwd()
-        workdir = self.options.workdir or pwd
+        self.workdir = self.options.workdir or pwd
 
         self.config = None
 
         fnp_config = self.options.config
+        if self.options.init:
+            return self._initialize(fnp_config)
+
         if not fnp_config:
-            for dn in [workdir, pwd]:
+            for dn in [self.workdir, pwd]:
                 fnp_config = os.path.join(dn, self.FN_CONFIG)
                 try:
                     with open(fnp_config) as fi:
@@ -77,6 +81,7 @@ class Main(object):
             if cpdb(): pdb.set_trace()
             raise
 
+    DN = os.path.dirname(__file__)
     FN_CONFIG = "pip-stripper.yaml"
 
     @classmethod
@@ -135,6 +140,32 @@ class Main(object):
         
         # use snippet.optadd to expand choices.
         return parser
+
+
+    def _initialize(self, fnp_config):
+
+        
+
+        try:
+            fnp_config = os.path.join(self.workdir, self.FN_CONFIG)
+
+            config = dict(coucou=1)
+
+            #load the template file
+            fnp_template = os.path.join(self.DN, "templates/pip-stripper.yaml")
+            with open(fnp_template) as fi:
+                tmpl = fi.read()
+
+            seed = fill_template(tmpl, self)
+
+
+            with open(fnp_config, "w") as fo:
+                fo.write(seed)
+
+        except (Exception,) as e:
+            if cpdb(): pdb.set_trace()
+            raise
+
 
 
 if __name__ == "__main__":

@@ -1,0 +1,3 @@
+python-dateutil==2.8.0  
+pip-licenses==1.12.1
+pipdeptree==0.13.2

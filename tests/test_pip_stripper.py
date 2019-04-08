@@ -8,10 +8,16 @@ import unittest
 import pdb
 import sys
 
-from pip_stripper._pip_stripper import Main
+from pip_stripper._pip_stripper import Main, __file__ as _mainfile, Matcher
 from traceback import print_exc as xp
 
 from yaml import safe_load as yload
+
+import tempfile
+
+undefined = object()
+
+
 
 def build_args(**kwargs):
     pass
@@ -42,9 +48,7 @@ class Base(unittest.TestCase):
         self.oldpwd = os.getcwd()
 
         if self.testdir:
-            self.testdir = os.path.join(dn_work, self.testdir)
-
-        os.chdir(self.testdir or dn_work)
+            os.chdir(self.testdir)
         self.parser = Main.getOptParser()
         self.stderr = ""
 
@@ -73,6 +77,7 @@ class Test_Bad_options(Base):
     def test_001_noconfig(self):
         try:
             options = self.parser.parse_args([])
+            pdb.set_trace()
             mgr = Main(options)
             self.fail("should have complained about missing configuration")
 
@@ -93,18 +98,62 @@ class Test_Bad_options(Base):
             if cpdb(): pdb.set_trace()
             raise
 
-class TestPip_Init(Base):
 
-    testdir = "tst.init"
+class WriterMixin(object):
+
+    baseprefix = "tmp.pip_stripper"
+    prefix = ""
+    _testdir = None
+
+    @property
+    def testdir(self):
+        if self._testdir is None:
+            prefix = self.baseprefix + (".%s" % (self.prefix) if self.prefix else "" )
+            self._testdir = tempfile.mkdtemp(prefix=prefix)
+
+        return self._testdir
+
+
+class TestPip_Init(WriterMixin, Base):
 
     def test_001_init(self):
         try:
+            print("self.testdir:%s" % (self.testdir))
             options = self.parser.parse_args(["--init"])       
             mgr = Main(options)
 
             fnp = os.path.join(mgr.workdir, mgr.FN_CONFIG)
             with open(fnp) as fi:
                 config = yload(fi)
+            ppp(config)
+
+
+        except (Exception,) as e:
+            if cpdb(): pdb.set_trace()
+            raise
+
+class TestMatchingBase(unittest.TestCase):
+
+    li_pip = ["cx-Oracle", "requests"]
+    li_imp = ["cx_Oracle","requests"]
+
+    exp = {
+        "cx-Oracle" : "cx_Oracle",
+        "requests" : "requests",
+        }
+
+    def setUp(self):
+        try:
+            self.matcher = Matcher()
+            for 
+        except (Exception,) as e:
+            if cpdb(): pdb.set_trace()
+            raise
+
+class TestMatchingJinja(TestMatchingBase):
+
+    def test_001_jinja2(self):
+        try:
             
 
 
@@ -112,6 +161,9 @@ class TestPip_Init(Base):
         except (Exception,) as e:
             if cpdb(): pdb.set_trace()
             raise
+
+
+
 
 
 if __name__ == '__main__':
