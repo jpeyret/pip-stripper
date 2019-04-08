@@ -7,6 +7,7 @@ import os
 import unittest
 import pdb
 import sys
+import shutil
 
 from pip_stripper._pip_stripper import Main, __file__ as _mainfile
 from pip_stripper.matching import Matcher
@@ -32,10 +33,14 @@ def cpdb(**kwds):
     return cpdb.enabled
 cpdb.enabled = False
 
-dn_work = os.path.dirname(__file__)
-print("dn_work:%s" % (dn_work))
+def rpdb(**kwds):
+    return rpdb.enabled
+rpdb.enabled = False
 
-from pip_stripper._baseutils import set_cpdb, ppp, debugObject
+
+dn_test = os.path.dirname(__file__)
+
+from pip_stripper._baseutils import set_cpdb, ppp, debugObject, set_rpdb
 
 class Base(unittest.TestCase):
     testdir = None
@@ -61,6 +66,8 @@ class Base(unittest.TestCase):
 class Test_Bad_options(Base):
     """Tests for `pip_stripper` package."""
 
+    testdir = dn_test
+
     def test_000_badarg(self):
 
         try:
@@ -75,11 +82,10 @@ class Test_Bad_options(Base):
                 pdb.set_trace()
             raise
 
-    @unittest.skipUnless(False, "Need to fix")
+    @unittest.skipUnless(1 or False, "Need to fix")
     def test_001_noconfig(self):
         try:
             options = self.parser.parse_args([])
-            # pdb.set_trace()
             mgr = Main(options)
             self.fail("should have complained about missing configuration")
 
@@ -100,6 +106,7 @@ class Test_Bad_options(Base):
             if cpdb(): pdb.set_trace()
             raise
 
+from glob import glob
 
 class WriterMixin(object):
 
@@ -115,6 +122,22 @@ class WriterMixin(object):
 
         return self._testdir
 
+    def seed(self):
+        try:
+
+            dn_src = os.path.join(dn_test, self.dn_seed)
+            dn_tgt = os.path.join(self.testdir, "py")
+
+            shutil.copytree(dn_src, dn_tgt)
+            mask = os.path.join(self.testdir, "*")
+
+            print(glob(mask))
+            return dn_tgt
+
+        except (Exception,) as e:
+            if cpdb(): pdb.set_trace()
+            raise
+
 
 class TestPip_Init(WriterMixin, Base):
 
@@ -129,19 +152,37 @@ class TestPip_Init(WriterMixin, Base):
                 config = yload(fi)
             ppp(config)
 
+        except (Exception,) as e:
+            if cpdb(): pdb.set_trace()
+            raise
+
+class TestPip_Scan(WriterMixin, Base):
+
+    dn_seed = "tst.seedworkdir01/py"
+
+    def setUp(self):
+        super(TestPip_Scan, self).setUp()
+        self.workdir = self.seed()
+
+    def test_001_scan(self):
+        try:
+            options = self.parser.parse_args(["--init", "--workdir", self.workdir, "--scan"])       
+            mgr = Main(options)
 
         except (Exception,) as e:
             if cpdb(): pdb.set_trace()
             raise
 
+
 class TestMatchingBase(unittest.TestCase):
 
-    li_pip = ["cx-Oracle", "requests"]
-    li_imp = ["cx_Oracle","requests"]
+    li_pip = ["cx-Oracle", "requests","python-dateutil","xxx"]
+    li_imp = ["dateutil","cx_Oracle","requests","yyy"]
 
     exp = {
         "cx-Oracle" : "cx_Oracle",
         "requests" : "requests",
+        "python-dateutil" : "dateutil"
         }
 
     def __repr__(self):
@@ -183,6 +224,6 @@ class TestMatchingJinja(TestMatchingBase):
 if __name__ == '__main__':
     # pdb.set_trace()
     set_cpdb(cpdb, remove=True)
-    # pdb.set_trace()
+    set_rpdb(rpdb, remove=True)
 
     unittest.main()

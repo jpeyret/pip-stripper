@@ -37,39 +37,38 @@ class Main(object):
 
     def __init__(self, options):
 
-        self.options = options
+        try:
+            self.options = options
 
-        pwd = os.getcwd()
-        self.workdir = self.options.workdir or pwd
+            pwd = os.getcwd()
+            self.workdir = self.options.workdir or pwd
 
-        self.config = None
+            self.config = None
 
-        fnp_config = self.options.config
-        if self.options.init:
-            return self._initialize(fnp_config)
+            fnp_config = self.options.config
+            if self.options.init:
+                return self._initialize(fnp_config)
 
-        if not fnp_config:
-            for dn in [self.workdir, pwd]:
-                fnp_config = os.path.join(dn, self.FN_CONFIG)
-                try:
-                    with open(fnp_config) as fi:
-                        self.config = yload(fi)
-                        break
-                except (IOError,) as e:
-                    pass
+            if not fnp_config:
+                for dn in [self.workdir, pwd]:
+                    fnp_config = os.path.join(dn, self.FN_CONFIG)
+                    try:
+                        with open(fnp_config) as fi:
+                            self.config = yload(fi)
+                            break
+                    except (IOError,) as e:
+                        pass
+                else:
+                    raise ValueError("missing configuration file")
+
             else:
-                raise ValueError("missing configuration file")
-
-        else:
-            with open(fnp_config) as fi:
-                self.config = yload(fi)
-
-
-
-
-
-        ppp(self)
-
+                with open(fnp_config) as fi:
+                    self.config = yload(fi)
+        except (ValueError,) as e:
+            raise
+        except (Exception,) as e:
+            if cpdb(): pdb.set_trace()
+            raise
 
 
 
