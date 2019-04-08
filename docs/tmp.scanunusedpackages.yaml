@@ -1,0 +1,73 @@
+---  # document start
+
+# Comments in YAML look like this.
+
+################
+# SCALAR TYPES #
+################
+
+Untracked:
+  - "bemyerp"
+  - "mock"
+  # - "lazy_regression_tests"
+  - "cStringIO"  #2.x legacy...
+  - "repr"  #2.x legacy...
+  - "appname" #comment string...
+  - "-arkdown"
+
+codedir: "/Users/jluc/kds2/py2/bemyerp"
+
+PipDepHelper:
+  ignore:
+    - pass
+
+  workstation:
+    # mostly modules that are used to develop/audit even if they dont
+    # show up in the source code:
+    - "boto3"
+    - "pre-commit"
+    - "pipdeptree"
+    - "pip-licenses"
+    - "black"
+    - "ansible"
+    - "cookiecutter"
+    - "s3cmd"
+    - "libtmux"
+    - "fab"
+    - "fabtools"
+    - "libtmux"
+
+  prod:
+    - gunicorn
+    - pynoorm
+    - psycopg2
+    - cx-Oracle
+    - redis_cache
+
+  tests:
+    - nose_cov
+    - nose2
+    - pytest
+
+PackageBucketTracker:
+  precedence:
+    - "prod"
+    - "tests"
+    - "dev"
+
+extra_stdlib:
+  - "time"
+  - "sys"
+  - "itertools"
+  - "math"
+  - "mock"
+
+partition_dirs:
+  tests:
+    - "^tests/"
+  dev:
+    - "^non_app/"
+    - "^doc/"
+  prod:
+    - "."
+

@@ -1,0 +1,316 @@
+stdlib:
+- __future__
+- __phello__.foo
+- _bootlocale
+- _collections_abc
+- _compat_pickle
+- _compression
+- _dummy_thread
+- _markupbase
+- _osx_support
+- _pydecimal
+- _pyio
+- _sitebuiltins
+- _strptime
+- _sysconfigdata_m_darwin_darwin
+- _threading_local
+- _weakrefset
+- abc
+- aifc
+- antigravity
+- argparse
+- ast
+- asynchat
+- asyncio
+- asyncore
+- base64
+- bdb
+- binhex
+- bisect
+- bz2
+- cProfile
+- calendar
+- cgi
+- cgitb
+- chunk
+- cmd
+- code
+- codecs
+- codeop
+- collections
+- colorsys
+- compileall
+- concurrent
+- config-3.6m-darwin
+- configparser
+- contextlib
+- copy
+- copyreg
+- crypt
+- csv
+- ctypes
+- curses
+- datetime
+- dbm
+- decimal
+- difflib
+- dis
+- distutils
+- doctest
+- dummy_threading
+- email
+- encodings
+- ensurepip
+- enum
+- filecmp
+- fileinput
+- fnmatch
+- formatter
+- fractions
+- ftplib
+- functools
+- genericpath
+- getopt
+- getpass
+- gettext
+- glob
+- gzip
+- hashlib
+- heapq
+- hmac
+- html
+- http
+- idlelib
+- imaplib
+- imghdr
+- imp
+- importlib
+- inspect
+- io
+- ipaddress
+- itertools
+- json
+- keyword
+- lib2to3
+- linecache
+- locale
+- logging
+- lzma
+- macpath
+- macurl2path
+- mailbox
+- mailcap
+- math
+- mimetypes
+- mock
+- modulefinder
+- multiprocessing
+- netrc
+- nntplib
+- ntpath
+- nturl2path
+- numbers
+- opcode
+- operator
+- optparse
+- os
+- pathlib
+- pdb
+- pickle
+- pickletools
+- pipes
+- pkgutil
+- platform
+- plistlib
+- poplib
+- posixpath
+- pprint
+- profile
+- pstats
+- pty
+- py_compile
+- pyclbr
+- pydoc
+- pydoc_data
+- queue
+- quopri
+- random
+- re
+- reprlib
+- rlcompleter
+- runpy
+- sched
+- secrets
+- selectors
+- shelve
+- shlex
+- shutil
+- signal
+- site
+- smtpd
+- smtplib
+- sndhdr
+- socket
+- socketserver
+- sqlite3
+- sre_compile
+- sre_constants
+- sre_parse
+- ssl
+- stat
+- statistics
+- string
+- stringprep
+- struct
+- subprocess
+- sunau
+- symbol
+- symtable
+- sys
+- sysconfig
+- tabnanny
+- tarfile
+- telnetlib
+- tempfile
+- test
+- textwrap
+- this
+- threading
+- time
+- timeit
+- tkinter
+- token
+- tokenize
+- trace
+- traceback
+- tracemalloc
+- tty
+- turtle
+- turtledemo
+- types
+- typing
+- unittest
+- urllib
+- uu
+- uuid
+- venv
+- warnings
+- wave
+- weakref
+- webbrowser
+- wsgiref
+- xdrlib
+- xml
+- xmlrpc
+- zipapp
+- zipfile
+
+package_imports:
+  dev: []
+  prod:
+  - ConfigParser
+  - UserDict
+  - atexit
+  - attrdict
+  - celery
+  - cx_Oracle
+  - dateutil
+  - debug_toolbar
+  - django
+  - expiringdict
+  - jinja2
+  - jsonpickle
+  - legacy
+  - pynoorm
+  - requests
+  - sqlalchemy
+  - wrapt
+  - yaml
+  tests:
+  - lazy_regression_tests
+  - nose
+  - pycallgraph
+  - pyquery
+  - pytest
+  - simplejson
+  - urlparse
+  - webpack_loader
+
+pip:
+  _local:
+    unknown:
+    - Babel
+    - Beaker
+    - ReText
+    - _arkdown
+    - alabaster
+    - anyjson
+    - banal
+    - cached_property
+    - celery_results
+    - cmarkgfm
+    - colorama
+    - datafreeze
+    - decorator
+    - distlib
+    - enum34
+    - format_sql
+    - funcsigs
+    - futures
+    - html5lib
+    - httplib2
+    - imagesize
+    - ipaddress
+    - kaptan
+    - mock
+    - nose2
+    - nose_cov
+    - packaging
+    - pathlib2
+    - pip_licenses
+    - pre_commit
+    - prettyprint
+    - pyOpenSSL
+    - pypiserver
+    - recordtype
+    - requests_html
+    - roman
+    - scandir
+    - simple_redis_admin
+    - snowballstemmer
+    - twine
+    workstation:
+    - ansible
+    - black
+    - boto3
+    - cookiecutter
+    - fab
+    - fabtools
+    - libtmux
+    - pip-licenses
+    - pipdeptree
+    - pre-commit
+    - s3cmd
+  _settings_dev: []
+  dev: []
+  prod:
+  - attrdict
+  - bemyerp
+  - cx_Oracle
+  - debug_toolbar
+  - django
+  - django_celery_results
+  - expiringdict
+  - gunicorn
+  - jsonpickle
+  - psycopg2
+  - pynoorm
+  - redis_cache
+  - webpack_loader
+  - wrapt
+  tests:
+  - lazy_regression_tests
+  - pycallgraph
+  - pytest
+  - simplejson
+  - webpack_loader
