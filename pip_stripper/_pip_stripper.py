@@ -17,7 +17,7 @@ import os
 from traceback import print_exc as xp
 import pdb
 
-from pip_stripper._baseutils import set_cpdb, set_rpdb, ppp, debugObject, cpdb, fill_template
+from pip_stripper._baseutils import set_cpdb, set_rpdb, ppp, debugObject, cpdb, fill_template, rpdb, sub_template
 
 from yaml import safe_load as yload, dump
 
@@ -47,7 +47,7 @@ class Main(object):
 
             fnp_config = self.options.config
             if self.options.init:
-                return self._initialize(fnp_config)
+                fnp_config = self._initialize(fnp_config)
 
             if not fnp_config:
                 for dn in [self.workdir, pwd]:
@@ -64,6 +64,28 @@ class Main(object):
             else:
                 with open(fnp_config) as fi:
                     self.config = yload(fi)
+
+            #
+            self.vars = dict()
+
+            di_tmp = self.config.get("")
+
+            sectionname = "filenames"
+            section = self.config["vars"][sectionname]
+
+            for k, v in section.items():
+                self.vars.update(**{"%s_%s" % (sectionname, k): v})
+
+            if rpdb(): pdb.set_trace()
+
+
+
+  #               vars:
+  # filenames:
+  #   scan: "tmp.pip-stripper.imports.rpt"
+
+
+
         except (ValueError,) as e:
             raise
         except (Exception,) as e:
@@ -75,7 +97,12 @@ class Main(object):
 
     def process(self):
         try:
-            logger.info("process")
+            if 1 or rpdb(): pdb.set_trace()
+            if self.options.scan:
+                scanner = Scanner(self)
+                scanner.run()
+
+
         except (Exception,) as e:
             if cpdb(): pdb.set_trace()
             raise
@@ -161,6 +188,34 @@ class Main(object):
             with open(fnp_config, "w") as fo:
                 fo.write(seed)
 
+        except (Exception,) as e:
+            if cpdb(): pdb.set_trace()
+            raise
+
+class Scanner(object):
+    def __init__(self, mgr):
+        self.mgr = mgr
+
+    tasknames = ["grep_1", "grep_2" ]
+
+    def run(self):
+        for taskname in self.tasknames:
+            config = self.mgr.config.get("Command")["tasks"][taskname]
+
+            command = Command(taskname, config)
+            command.run()
+
+
+class Command(object):
+    def __init__(self, taskname, config, append=False):
+        self.taskname = taskname
+        self.append = append
+
+        self.config = config
+
+    def run(self):
+        try:
+            raise NotImplementedError("%s.run(%s)" % (self, locals()))
         except (Exception,) as e:
             if cpdb(): pdb.set_trace()
             raise

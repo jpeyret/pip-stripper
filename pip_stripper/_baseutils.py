@@ -1,5 +1,12 @@
 import sys
 import types
+import logging
+
+from string import Template
+
+logger = logging.getLogger(__name__)
+
+
 
 try:
     from cStringIO import StringIO  # 223ed
@@ -211,6 +218,16 @@ def debugDict(
 def fill_template(tmpl, *args):  #!!!TODO!!! _baseutils
     try:
         return tmpl % Subber(*args)
+    except Exception as e:
+        logger.debug("tmpl:%s,args:%s" % (tmpl, args))
+        raise
+
+def sub_template(tmpl, *args):
+    if isinstance(tmpl, basestring_):
+        tmpl = Template(tmpl)
+
+    try:
+        return tmpl.substitute(Subber(*args))
     except Exception as e:
         logger.debug("tmpl:%s,args:%s" % (tmpl, args))
         raise

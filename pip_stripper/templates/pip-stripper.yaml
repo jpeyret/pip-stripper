@@ -14,9 +14,48 @@ extra_stdlib:
   - "math"
   - "mock"
 
+vars:
+  filenames:
+    scan: "tmp.pip-stripper.imports.rpt"
+
+
 ######################
 # A bucket holds package names and maps to a requirements.xxx.txt file.
 ######################
+
+
+
+Command:
+
+
+    # local tmpoistdlib=$BME_DIR_REPORT/packages.stdlib.rpt
+    # local tmpoiimportall=$BME_DIR_REPORT/allimports.rpt
+    # local tmpoipipdeptree=$BME_DIR_REPORT/pipdeptree.rpt
+
+    # cdkm
+    # liststdlib.py > $tmpoistdlib
+    # greppy '^\s*from\s.+\simport\s' _ > $tmpoiimportall 
+    # greppy '^\s*import\s' _ >> $tmpoiimportall 
+    # pipdeptree > $tmpoipipdeptree
+    # printf '\n\nstdlib                @: '$tmpoistdlib
+    # printf '\n\nimportall             @: '$tmpoiimportall
+    # printf '\n\npipdeptree            @: '$tmpoipipdeptree
+
+
+  tasks:
+    grep_1:
+      #command egrep -i --include=*.py --exclude="*/migrations/*" --exclude-dir=node_modules -r -n 
+      cmdline: "egrep '^\\s*from\\s.+\\simport\\s' --include=*.py --exclude='*/migrations/*' --exclude-dir=node_modules -r -n $scandir" 
+      filename: "$filenames_scan"
+
+    grep_2:
+      cmdline: "egrep '^\\s*import\\s' --include=*.py --exclude='*/migrations/*' --exclude-dir=node_modules -r -n $scandir" 
+      filename: "$filenames_scan"
+      append: True      
+
+
+
+
 
 PackageBucketTracker:
 

@@ -166,8 +166,10 @@ class TestPip_Scan(WriterMixin, Base):
 
     def test_001_scan(self):
         try:
-            options = self.parser.parse_args(["--init", "--workdir", self.workdir, "--scan"])       
+            options = self.parser.parse_args(["--init", "--workdir", self.workdir   ])       
             mgr = Main(options)
+            if rpdb(): pdb.set_trace()
+            mgr.process()
 
         except (Exception,) as e:
             if cpdb(): pdb.set_trace()
