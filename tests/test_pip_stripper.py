@@ -144,6 +144,9 @@ class TestMatchingBase(unittest.TestCase):
         "requests" : "requests",
         }
 
+    def __repr__(self):
+        return self.__class__.__name__
+
     def test(self):
         try:
             self.matcher = Matcher()
@@ -152,10 +155,16 @@ class TestMatchingBase(unittest.TestCase):
             for name in self.li_imp:
                 self.matcher.imp.feed(name)
 
+            self.matcher.do_match()
+
             self.assertEqual(self.exp, self.matcher.di_pip_imp)
 
         except (Exception,) as e:
-            if cpdb(): pdb.set_trace()
+            ppp(self.matcher, "%s.matcher" % (self))
+            ppp(self.matcher.pip, "pip")
+            ppp(self.matcher.imp, "imp")
+            if cpdb(): 
+                pdb.set_trace()
             raise
 
 class TestMatchingJinja(TestMatchingBase):
