@@ -17,49 +17,53 @@ extra_stdlib:
 vars:
   filenames:
     scan: "tmp.pip-stripper.imports.rpt"
+    freeze: "tmp.pip-stripper.freeze.rpt"
+    pipdeptree: "tmp.pipdeptree.rpt"
+    liststdlib: "tmp.liststdlib.rpt"
 
 
-######################
-# A bucket holds package names and maps to a requirements.xxx.txt file.
-######################
 
 Scanner:
   tasknames: 
     - grep_1
-    # - grep_2
+    - grep_2
+    - freeze
+    - pipdeptree
 
 
 Command:
 
 
-    # local tmpoistdlib=$BME_DIR_REPORT/packages.stdlib.rpt
-    # local tmpoiimportall=$BME_DIR_REPORT/allimports.rpt
-    # local tmpoipipdeptree=$BME_DIR_REPORT/pipdeptree.rpt
 
-    # cdkm
-    # liststdlib.py > $tmpoistdlib
-    # greppy '^\s*from\s.+\simport\s' _ > $tmpoiimportall 
-    # greppy '^\s*import\s' _ >> $tmpoiimportall 
-    # pipdeptree > $tmpoipipdeptree
-    # printf '\n\nstdlib                @: '$tmpoistdlib
-    # printf '\n\nimportall             @: '$tmpoiimportall
-    # printf '\n\npipdeptree            @: '$tmpoipipdeptree
-
+  #####################
+  # please note:  
+  #   to keep yaml happy double the \ escapes used in regex or others
+  #     ex: \s => \\s
+  #   to keep subprocess happy, don't use as in '^\\s*import\\s'
+  ######################
 
   tasks:
     grep_1:
-      #command egrep -i --include=*.py --exclude="*/migrations/*" --exclude-dir=node_modules -r -n 
       cmdline: "egrep ^\\s*from\\s.+\\simport\\s --include=*.py --exclude=*/migrations/* --exclude-dir=node_modules -r -n $scandir" 
-      # cmdline: "egrep 'import' --include=*.py --exclude='*/migrations/*' --exclude-dir=node_modules -r -n $scandir" 
       filename: "$filenames_scan"
 
     grep_2:
-      cmdline: "egrep '^\\s*import\\s' --include=*.py --exclude='*/migrations/*' --exclude-dir=node_modules -r -n $scandir" 
+      cmdline: "egrep ^\\s*import\\s --include=*.py --exclude=*/migrations/* --exclude-dir=node_modules -r -n $scandir" 
       filename: "$filenames_scan"
       append: True      
 
+    freeze:
+      cmdline: "pip freeze"
+      filename: "$filenames_freeze"
+
+    pipdeptree:
+      cmdline: "pipdeptree"
+      filename: "$filenames_pipdeptree"
 
 
+######################
+# A bucket holds package names and maps to a requirements.xxx.txt file.
+######################
 
 
 PackageBucketTracker:

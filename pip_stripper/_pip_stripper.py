@@ -14,6 +14,7 @@ import argparse
 import re
 import os
 import subprocess
+import distutils.sysconfig as sysconfig
 
 from traceback import print_exc as xp
 import pdb
@@ -195,6 +196,35 @@ class Main(object):
             if cpdb(): pdb.set_trace()
             raise
 
+def liststdlib(fnp_out, toponly=True, mgr=None):
+    """
+    pretty grungy code, will need a rework
+    """
+
+    extra_stdlib = []
+    if mgr:
+        extra_stdlib=mgr.config.get("extra_stdlib",[])
+
+    if toponly:
+        listed = set(extra_stdlib)
+
+    std_lib = sysconfig.get_python_lib(standard_lib=True)
+    for top, dirs, files in os.walk(std_lib):
+        for nm in files:
+            if nm != '__init__.py' and nm[-3:] == '.py':
+                found = os.path.join(top, nm)[len(std_lib)+1:-3].replace('\\','.')
+
+                if toponly:
+                    found = found.split("/")[0]
+                    if found in listed:
+                        continue
+                    listed.add(found)
+
+    with open(fnp_out, "w") as fo:
+        for line in sorted(listed):
+            fo.write("%s\n" % (line))
+
+
 class Scanner(object):
     def __init__(self, mgr):
         self.mgr = mgr
@@ -204,15 +234,20 @@ class Scanner(object):
         self.config = self.mgr.config.get(self.__class__.__name__)
         self.tasknames = self.config["tasknames"]
 
-    # tasknames = ["grep_1", "grep_2" ]
 
     def run(self):
-        for taskname in self.tasknames:
-            config = self.mgr.config.get("Command")["tasks"][taskname]
+        try:
+            for taskname in self.tasknames:
+                config = self.mgr.config.get("Command")["tasks"][taskname]
 
-            command = Command(self.mgr, taskname, config)
-            command.run()
+                command = Command(self.mgr, taskname, config)
+                command.run()
 
+            fnp_out = os.path.join(self.mgr.workdir, self.mgr.config["vars"]["filenames"]["liststdlib"])
+            liststdlib(fnp_out, toponly=True, mgr=self.mgr)
+        except (Exception,) as e:
+            if cpdb(): pdb.set_trace()
+            raise
 
 class Command(object):
     def __init__(self, mgr, taskname, config, append=False):
@@ -221,40 +256,28 @@ class Command(object):
         self.append = append
 
         self.config = config
+        self.stderr = ""
 
+    def write(self, msg):
+        self.stderr += "%s\n" 
 
     def run(self):
         try:
             t_cmd = self.config["cmdline"]#.replace(r"\\","\\")
-            #.replace(r"\\",r"\")
-
             t_fnp = os.path.join(self.mgr.workdir, self.config["filename"])
 
-
             cmd = sub_template(t_cmd, self, self.mgr.vars)
-
-            #cmd = "egrep 'import' --include=*.py --exclude='*/migrations/*' --exclude-dir=node_modules -r -n /Users/jluc/kds2/issues2/067.pip-stripper/001.start/py"
-            #cmd = "egrep ^\\s*from\\s.+\\simport\\s --include=*.py  -r -n /Users/jluc/kds2/issues2/067.pip-stripper/001.start/py"
 
             fnp_o = sub_template(t_fnp, self, self.mgr.vars)
 
             li_cmdline = cmd.split()
 
-            # proc = subprocess.Popen(li_cmd, stdout=subprocess.PIPE)
-            # # 50.golive.07.p2.datloader - this is a bytes, object, should be a string...
-            # li_line = proc.stdout.readlines()
 
-            with open(fnp_o, "w") as fo:
-                proc = subprocess.Popen(cmd.split(), stdout=fo)
-            #     res = subprocess.check_output(li_cmdline, stderr=fo)
-            #     print(res)
+            mode = "a" if self.append else "w"
 
-            #     # li_line = proc.stdout.readlines()
+            with open(fnp_o, mode) as fo:
+                proc = subprocess.Popen(cmd.split(), stdout=fo, stderr=subprocess.DEVNULL, cwd=self.mgr.workdir, encoding="utf-8")
 
-            # pdb.set_trace()
-
-
-            # raise NotImplementedError("%s.run(%s)" % (self, locals()))
         except (Exception,) as e:
             if cpdb(): pdb.set_trace()
             raise
