@@ -23,6 +23,10 @@ vars:
 # A bucket holds package names and maps to a requirements.xxx.txt file.
 ######################
 
+Scanner:
+  tasknames: 
+    - grep_1
+    # - grep_2
 
 
 Command:
@@ -45,7 +49,8 @@ Command:
   tasks:
     grep_1:
       #command egrep -i --include=*.py --exclude="*/migrations/*" --exclude-dir=node_modules -r -n 
-      cmdline: "egrep '^\\s*from\\s.+\\simport\\s' --include=*.py --exclude='*/migrations/*' --exclude-dir=node_modules -r -n $scandir" 
+      cmdline: "egrep ^\\s*from\\s.+\\simport\\s --include=*.py --exclude=*/migrations/* --exclude-dir=node_modules -r -n $scandir" 
+      # cmdline: "egrep 'import' --include=*.py --exclude='*/migrations/*' --exclude-dir=node_modules -r -n $scandir" 
       filename: "$filenames_scan"
 
     grep_2:

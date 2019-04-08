@@ -128,7 +128,8 @@ class WriterMixin(object):
             dn_src = os.path.join(dn_test, self.dn_seed)
             dn_tgt = os.path.join(self.testdir, "py")
 
-            shutil.copytree(dn_src, dn_tgt)
+            if not os.path.exists(dn_tgt):
+                shutil.copytree(dn_src, dn_tgt)
             mask = os.path.join(self.testdir, "*")
 
             print(glob(mask))
@@ -159,6 +160,8 @@ class TestPip_Init(WriterMixin, Base):
 class TestPip_Scan(WriterMixin, Base):
 
     dn_seed = "tst.seedworkdir01/py"
+
+    testdir = "/Users/jluc/kds2/issues2/067.pip-stripper/001.start"
 
     def setUp(self):
         super(TestPip_Scan, self).setUp()

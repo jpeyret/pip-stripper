@@ -13,6 +13,7 @@ import sys
 import argparse
 import re
 import os
+import subprocess
 
 from traceback import print_exc as xp
 import pdb
@@ -20,6 +21,7 @@ import pdb
 from pip_stripper._baseutils import set_cpdb, set_rpdb, ppp, debugObject, cpdb, fill_template, rpdb, sub_template
 
 from yaml import safe_load as yload, dump
+
 
 
 if __name__ == "__main__":
@@ -68,6 +70,8 @@ class Main(object):
             #
             self.vars = dict()
 
+            self.vars["scandir"] = self.options.workdir
+
             di_tmp = self.config.get("")
 
             sectionname = "filenames"
@@ -97,7 +101,6 @@ class Main(object):
 
     def process(self):
         try:
-            if 1 or rpdb(): pdb.set_trace()
             if self.options.scan:
                 scanner = Scanner(self)
                 scanner.run()
@@ -195,27 +198,63 @@ class Main(object):
 class Scanner(object):
     def __init__(self, mgr):
         self.mgr = mgr
+        self.vars = mgr.vars
+        self.worker = mgr.workdir
 
-    tasknames = ["grep_1", "grep_2" ]
+        self.config = self.mgr.config.get(self.__class__.__name__)
+        self.tasknames = self.config["tasknames"]
+
+    # tasknames = ["grep_1", "grep_2" ]
 
     def run(self):
         for taskname in self.tasknames:
             config = self.mgr.config.get("Command")["tasks"][taskname]
 
-            command = Command(taskname, config)
+            command = Command(self.mgr, taskname, config)
             command.run()
 
 
 class Command(object):
-    def __init__(self, taskname, config, append=False):
+    def __init__(self, mgr, taskname, config, append=False):
+        self.mgr = mgr
         self.taskname = taskname
         self.append = append
 
         self.config = config
 
+
     def run(self):
         try:
-            raise NotImplementedError("%s.run(%s)" % (self, locals()))
+            t_cmd = self.config["cmdline"]#.replace(r"\\","\\")
+            #.replace(r"\\",r"\")
+
+            t_fnp = os.path.join(self.mgr.workdir, self.config["filename"])
+
+
+            cmd = sub_template(t_cmd, self, self.mgr.vars)
+
+            #cmd = "egrep 'import' --include=*.py --exclude='*/migrations/*' --exclude-dir=node_modules -r -n /Users/jluc/kds2/issues2/067.pip-stripper/001.start/py"
+            #cmd = "egrep ^\\s*from\\s.+\\simport\\s --include=*.py  -r -n /Users/jluc/kds2/issues2/067.pip-stripper/001.start/py"
+
+            fnp_o = sub_template(t_fnp, self, self.mgr.vars)
+
+            li_cmdline = cmd.split()
+
+            # proc = subprocess.Popen(li_cmd, stdout=subprocess.PIPE)
+            # # 50.golive.07.p2.datloader - this is a bytes, object, should be a string...
+            # li_line = proc.stdout.readlines()
+
+            with open(fnp_o, "w") as fo:
+                proc = subprocess.Popen(cmd.split(), stdout=fo)
+            #     res = subprocess.check_output(li_cmdline, stderr=fo)
+            #     print(res)
+
+            #     # li_line = proc.stdout.readlines()
+
+            # pdb.set_trace()
+
+
+            # raise NotImplementedError("%s.run(%s)" % (self, locals()))
         except (Exception,) as e:
             if cpdb(): pdb.set_trace()
             raise
