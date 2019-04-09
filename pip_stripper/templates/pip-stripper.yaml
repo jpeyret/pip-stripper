@@ -62,6 +62,9 @@ Command:
       cmdline: "pipdeptree"
       filename: "$filenames_pipdeptree"
 
+
+
+
 ##############################
 # classifies the imports
 ##############################
@@ -125,29 +128,35 @@ untracked:
 
 workdir: %(workdir)s
 
-PipDepHelper:
+#########################
+#
+#########################
+
+ClassifierPip:
 
   #the following are used to "hardcode" package names to given buckets.
 
-  workstation:
-    # mostly modules that are used to develop/audit even if they dont
-    # show up in the source code:
-    # so you may have installed say `ansible` to build servers, but it makes
-    # no sense to install `ansible` on those servers
-    - pass 
+  buckets:
 
-  prod:
-    # enter packages that you _know_ you want to put in `requirements.prod.txt` but are not
-    # getting picked up for some reason.  `psycopg2` doesn't show up an `import` of a Django
-    # site using postgresql but is still required.
-    - pass
+    workstation:
+      # mostly modules that are used to develop/audit even if they dont
+      # show up in the source code:
+      # so you may have installed say `ansible` to build servers, but it makes
+      # no sense to install `ansible` on those servers
+      - pass 
 
-  tests:
-    # enter packages that are need for tests.  `pytest` might be an example.
-    - pass
+    prod:
+      # enter packages that you _know_ you want to put in `requirements.prod.txt` but are not
+      # getting picked up for some reason.  `psycopg2` doesn't show up an `import` of a Django
+      # site using postgresql but is still required.
+      - psycopg2
 
-  dev:
-    # enter packages that are need for dev.  in practice, tests and dev are mapped the 
-    # same...
-    - pass
+    tests:
+      # enter packages that are need for tests.  `pytest` might be an example.
+      - pyquery
+
+    dev:
+      # enter packages that are need for dev.  in practice, tests and dev are mapped the 
+      # same...
+      - pass
 

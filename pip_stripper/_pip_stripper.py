@@ -33,6 +33,7 @@ from pip_stripper._baseutils import (
 )
 
 from pip_stripper.writers import ScanWriter
+from pip_stripper.matching import Matcher
 
 from yaml import safe_load as yload, dump
 
@@ -103,8 +104,7 @@ class Main(object):
 
             self.scanwriter = ScanWriter(self)
 
-            if rpdb():
-                pdb.set_trace()
+            self.matcher = Matcher()
 
         except (ValueError,) as e:
             raise
@@ -120,6 +120,18 @@ class Main(object):
                 self.scanner.run()
                 self.import_classifier = ClassifierImport(self)
                 self.import_classifier.run()
+
+                self.pip_classifier = ClassifierPip(self)
+                pdb.set_trace()
+
+                for name in self.li_pip:
+                    self.matcher.pip.feed(name)
+                for name in self.li_imp:
+                    self.matcher.imp.feed(name)
+
+                self.matcher.do_match()
+
+                self.aliases = self.matcher.di_pip_imp.copy()
 
                 self.scanwriter.write()
 
@@ -278,17 +290,8 @@ class ClassifierImport(object):
             self.di_bucket = {}
 
             self.fnp_importscan = self.mgr._get_fnp("imports")
-            if rpdb():
-                pdb.set_trace()
-
-            fnp_liststdlib = os.path.join(
-                self.mgr.workdir, mgr.config["vars"]["filenames"]["liststdlib"]
-            )
 
             self.s_untracked = set(self.mgr.config.get("untracked", []))
-
-            with open(fnp_liststdlib) as fi:
-                self.s_stdlib = set([line.strip() for line in fi if line.strip()])
 
             bucketnames_tracker = self.config["buckets"]["precedence"]
 
@@ -327,6 +330,11 @@ class ClassifierImport(object):
     def run(self):
         try:
             # raise NotImplementedError("%s.run(%s)" % (self, locals()))
+
+            fnp_liststdlib = self.mgr._get_fnp("liststdlib")
+
+            with open(fnp_liststdlib) as fi:
+                self.s_stdlib = set([line.strip() for line in fi if line.strip()])
 
             with open(self.fnp_importscan) as fi:
                 for line in fi.readlines():
@@ -556,6 +564,87 @@ class PythonFile:
             bucket = directorypartitioner.classify_filename(filename)
             res = cls.di_filename[filename] = cls(filename, bucket)
             return res
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+
+class ClassifierPip(object):
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def __init__(self, mgr):
+        try:
+            self.mgr = mgr
+            self.config = self.mgr.config.get(self.__class__.__name__)
+
+            self.di_bucket = self.config["buckets"]
+            for k, v in self.di_bucket.items():
+                s_ = self.di_bucket[k] = set(v)
+                try:
+                    s_.remove("pass")
+                except (KeyError,) as e:
+                    pass
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+    def run(self, packagetracker):
+
+        try:
+            self.s_directinstall = set()
+            for line in self.data.split("\n"):
+                if line.startswith(" "):
+                    continue
+                if not line.strip():
+                    continue
+
+                packagename, version = self.patre_splitline.split(line)
+
+                self.s_directinstall.add(packagename)
+
+            di_packagename2pip = self.mgr.di_packagename2pip
+
+            for packagename_ in self.s_directinstall:
+                packagename = packagename_.replace("-", "_")
+                if packagename.startswith("django_"):
+                    packagename = packagename.replace("django_", "")
+
+                if packagename_ != packagename:
+                    di_packagename2pip[packagename_] = packagename
+
+                # if packagetracker.get_package(packagename):
+                bucketname = packagetracker.get_package(packagename)
+                if bucketname:
+                    self.di_bucket[bucketname].add(packagename)
+                    continue
+
+                if packagename in self.s_prod:
+                    self.di_bucket["prod"].add(packagename)
+                    continue
+
+                if packagename in self.s_prodsettings:
+                    self.s_prodsettings.remove(packagename)
+                    self.di_bucket["prod"].add(packagename)
+                    continue
+
+                if packagename in self.s_workstation:
+                    continue
+
+                if packagename in self.s_devsettings:
+                    continue
+
+                self.s_unknown.add(packagename)
+
+            self.di_bucket["prod"] = self.di_bucket["prod"] | self.s_prodsettings
+
+            self.s_unknown = (
+                self.s_unknown - self.di_bucket["prod"] - self.di_bucket["dev"]
+            )
 
         except (Exception,) as e:
             if cpdb():
