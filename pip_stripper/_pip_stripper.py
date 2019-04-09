@@ -16,6 +16,7 @@ import re
 import os
 import subprocess
 import distutils.sysconfig as sysconfig
+from collections import defaultdict
 
 from traceback import print_exc as xp
 import pdb
@@ -458,7 +459,7 @@ class PackageBucketTracker:
         for packagename, bucketname in self.di_packagename.items():
             di_result[bucketname].append(packagename)
 
-        return di_result
+        return dict(**di_result)
 
     def report(self):
         classification = self.classify()

@@ -52,7 +52,7 @@ class ScanWriter(object):
                 pdb.set_trace()
 
             self.di = dict(
-                imports=dict(dev="dev", prod="prod", tests="tests"),
+                imports=self.mgr.import_classifier.packagetracker.classify(),
                 pips=dict(dev="dev", prod="prod", tests="tests"),
                 aliases=[],
                 stdlib=[],
