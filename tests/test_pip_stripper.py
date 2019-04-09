@@ -10,7 +10,7 @@ import sys
 import shutil
 from glob import glob
 
-from pip_stripper._pip_stripper import Main, __file__ as _mainfile
+from pip_stripper._pip_stripper import Main, __file__ as _mainfile, Command
 from pip_stripper.matching import Matcher
 from traceback import print_exc as xp
 
@@ -177,6 +177,42 @@ class WriterMixin(object):
             if cpdb():
                 pdb.set_trace()
             raise
+
+
+class BaseCommand(WriterMixin, Base):
+    def setUp(self):
+        try:
+            super(BaseCommand, self).setUp()
+            options = self.parser.parse_args(["--init", "--workdir", self.testdir])
+
+            self.mgr = Main(options)
+            self.config = self.mgr.config["Command"]["tasks"][self.taskname]
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+    def test_run(self):
+        try:
+            command = Command(self.mgr, self.taskname, self.config)
+            command.run()
+            fnp = self.mgr._get_fnp(self.taskname)
+            with open(fnp) as fi:
+                data = fi.read()
+                self.assertTrue(data, "%s was empty" % (fnp))
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+
+class TestCommandFreeze(BaseCommand):
+    taskname = "freeze"
+
+
+class TestPipDepTree(BaseCommand):
+    taskname = "pipdeptree"
 
 
 class TestPip_Init(WriterMixin, Base):
