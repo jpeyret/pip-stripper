@@ -54,7 +54,7 @@ class ScanWriter(object):
             self.di = dict(
                 imports=self.mgr.import_classifier.packagetracker.classify(),
                 pips=dict(dev="dev", prod="prod", tests="tests"),
-                aliases=[],
+                aliases=self.mgr.aliases,
                 stdlib=[],
             )
 

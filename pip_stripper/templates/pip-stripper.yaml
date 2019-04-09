@@ -160,3 +160,9 @@ ClassifierPip:
       # same...
       - pass
 
+hardcoded_aliases:
+  #put in matches in the form...
+  #pip package name : import name
+  backports.functools-lru-cache: backports.functools_lru_cache
+  cached-property: cached_property
+  cx-Oracle: cx_Oracle

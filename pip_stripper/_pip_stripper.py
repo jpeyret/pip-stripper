@@ -121,17 +121,21 @@ class Main(object):
                 self.import_classifier = ClassifierImport(self)
                 self.import_classifier.run()
 
-                self.pip_classifier = ClassifierPip(self)
-                pdb.set_trace()
+                pips = self.pip_classifier = ClassifierPip(self)
+                # pdb.set_trace()
+                # di_bucket={'workstation': set(), 'prod': {'psycopg2'}, 'tests': {'pyquery'}, 'dev': set()}
 
-                for name in self.li_pip:
-                    self.matcher.pip.feed(name)
-                for name in self.li_imp:
-                    self.matcher.imp.feed(name)
+                # for name in self.li_pip:
+                for set_ in pips.di_bucket.values():
+                    [self.matcher.pip.feed(name) for name in set_]
 
-                self.matcher.do_match()
+                # for name in self.li_imp:
+                #     self.matcher.imp.feed(name)
+
+                # self.matcher.do_match()
 
                 self.aliases = self.matcher.di_pip_imp.copy()
+                self.aliases.update(**self.config.get("hardcoded_aliases", {}))
 
                 self.scanwriter.write()
 
