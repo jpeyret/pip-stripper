@@ -129,10 +129,10 @@ class Main(object):
                 for set_ in pips.di_bucket.values():
                     [self.matcher.pip.feed(name) for name in set_]
 
-                # for name in self.li_imp:
-                #     self.matcher.imp.feed(name)
+                for name in self.import_classifier.packagetracker.di_packagename:
+                    self.matcher.imp.feed(name)
 
-                # self.matcher.do_match()
+                self.matcher.do_match()
 
                 self.aliases = self.matcher.di_pip_imp.copy()
                 self.aliases.update(**self.config.get("hardcoded_aliases", {}))
@@ -343,6 +343,9 @@ class ClassifierImport(object):
             with open(self.fnp_importscan) as fi:
                 for line in fi.readlines():
                     filebucket, packagename = self.parse(line)
+                    # if rpdb():
+                    #     print("filebucket:%s, packagename:%s" % (filebucket, packagename))
+                    #     pdb.set_trace()
 
                     if packagename in self.s_stdlib:
                         logger.info("%s in std lib" % (packagename))
@@ -460,6 +463,9 @@ class PackageBucketTracker:
             if index_new < index_old:
                 # higher precendence for new (ex:  prod beats dev)
                 self.di_packagename[packagename] = bucketname
+
+            if rpdb():
+                pdb.set_trace()
         except (Exception,) as e:
             if cpdb():
                 pdb.set_trace()
