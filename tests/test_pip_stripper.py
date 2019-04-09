@@ -57,8 +57,27 @@ class Base(unittest.TestCase):
         """use this to test stderr"""
         self.stderr = msg
 
+    def set_testdirbase(self):
+        try:
+            Base.testdir_base = testdir_base = os.getenv("pip_stripper_testdir")
+            if testdir_base:
+
+                if not os.path.exists(testdir_base):
+                    os.makedirs(testdir_base)
+            else:
+                Base.testdir_base = tempfile.mkdtemp(prefix=prefix)
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
     def setUp(self):
         """Set up test fixtures, if any."""
+
+        self.testdir_base = (
+            getattr(self, "testdir_base", None) or self.set_testdirbase()
+        )
+
         self.oldpwd = os.getcwd()
 
         if self.testdir:
@@ -133,23 +152,11 @@ class WriterMixin(object):
     @property
     def testdir(self):
         if self._testdir is None:
-            # raise NotImplementedError("%s.testdir(%s)" % (self, locals()))
-            # pdb.set_trace()
+            testdir = os.path.join(Base.testdir_base, self.get_label())
+            if not os.path.exists(testdir):
+                os.makedirs(testdir)
 
-            testdir_base = os.getenv("pip_stripper_testdir")
-            if testdir_base:
-                pdb.set_trace()
-
-                testdir = os.path.join(testdir_base, self.get_label())
-                if not os.path.exists(testdir):
-                    os.makedirs(testdir)
-
-                self._testdir = testdir
-            else:
-                prefix = self.baseprefix + (
-                    ".%s" % (self.prefix) if self.prefix else ""
-                )
-                self._testdir = tempfile.mkdtemp(prefix=prefix)
+            self._testdir = testdir
 
         return self._testdir
 

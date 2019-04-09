@@ -16,10 +16,11 @@ extra_stdlib:
 
 vars:
   filenames:
-    scan: "tmp.pip-stripper.imports.rpt"
+    imports: "tmp.pip-stripper.imports.rpt"
     freeze: "tmp.pip-stripper.freeze.rpt"
     pipdeptree: "tmp.pip-stripper.pipdeptree.rpt"
     liststdlib: "tmp.pip-stripper.liststdlib.rpt"
+    scan: "pip-stripper.scan.yaml"
 
 
 
@@ -46,11 +47,11 @@ Command:
   tasks:
     grep_1:
       cmdline: "egrep ^\\s*from\\s.+\\simport\\s --include=*.py --exclude=*/migrations/* --exclude-dir=node_modules -r -n $scandir" 
-      filename: "$filenames_scan"
+      filename: "$filenames_imports"
 
     grep_2:
       cmdline: "egrep ^\\s*import\\s --include=*.py --exclude=*/migrations/* --exclude-dir=node_modules -r -n $scandir" 
-      filename: "$filenames_scan"
+      filename: "$filenames_imports"
       append: True      
 
     freeze:

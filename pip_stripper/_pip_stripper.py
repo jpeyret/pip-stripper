@@ -48,6 +48,15 @@ class Main(object):
     def __repr__(self):
         return self.__class__.__name__
 
+    def _get_fnp(self, subject):
+        try:
+            fn = self.config["vars"]["filenames"][subject]
+            return os.path.join(self.workdir, fn)
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
     def __init__(self, options):
 
         try:
@@ -107,9 +116,11 @@ class Main(object):
         try:
             if self.options.scan:
                 self.scanner = Scanner(self)
-                self.import_classifier = ClassifierImport(self)
                 self.scanner.run()
+                self.import_classifier = ClassifierImport(self)
                 self.import_classifier.run()
+
+                self.scanwriter.write()
 
         except (Exception,) as e:
             if cpdb():
@@ -265,9 +276,7 @@ class ClassifierImport(object):
             self.buckets = []
             self.di_bucket = {}
 
-            self.fnp_importscan = os.path.join(
-                self.mgr.workdir, mgr.config["vars"]["filenames"]["scan"]
-            )
+            self.fnp_importscan = self.mgr._get_fnp("imports")
             if rpdb():
                 pdb.set_trace()
 

@@ -44,10 +44,24 @@ class ScanWriter(object):
 
     def __init__(self, mgr):
         self.mgr = mgr
+        self.fnp_yaml = mgr._get_fnp("scan")
 
-    def write(self, *args, **kwargs):
+    def write(self):
         try:
-            raise NotImplementedError("write(%s)" % (locals()))
+            if rpdb():
+                pdb.set_trace()
+
+            self.di = dict(
+                imports=dict(dev="dev", prod="prod", tests="tests"),
+                pips=dict(dev="dev", prod="prod", tests="tests"),
+                aliases=[],
+                stdlib=[],
+            )
+
+            with open(self.fnp_yaml, "w", encoding="utf-8") as fo:
+                dump(self.di, fo, default_flow_style=False)
+
+            # raise NotImplementedError("write(%s)" % (locals()))
         except (Exception,) as e:
             if cpdb():
                 pdb.set_trace()
