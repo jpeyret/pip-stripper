@@ -18,8 +18,9 @@ vars:
   filenames:
     scan: "tmp.pip-stripper.imports.rpt"
     freeze: "tmp.pip-stripper.freeze.rpt"
-    pipdeptree: "tmp.pipdeptree.rpt"
-    liststdlib: "tmp.liststdlib.rpt"
+    pipdeptree: "tmp.pip-stripper.pipdeptree.rpt"
+    liststdlib: "tmp.pip-stripper.liststdlib.rpt"
+
 
 
 
@@ -60,22 +61,28 @@ Command:
       cmdline: "pipdeptree"
       filename: "$filenames_pipdeptree"
 
+##############################
+# classifies the imports
+##############################
 
-######################
-# A bucket holds package names and maps to a requirements.xxx.txt file.
-######################
+ClassifierImport:
 
 
-PackageBucketTracker:
+  pattern_splitline: ":\\d+:"
 
-  #this basically says, if module `x` is found in several buckets then put 
-  #it in the highest one.  i.e. `jinja2` in prod AND dev is put in prod and 
-  #removed from dev.
-  precedence:
-    #leave it alone!
-    - "prod"
-    - "tests"
-    - "dev"
+  ######################
+  # A bucket holds package names and maps to a requirements.xxx.txt file.
+  ######################
+  buckets:
+
+    #this basically says, if module `x` is found in several buckets then put 
+    #it in the highest one.  i.e. `jinja2` in prod AND dev is put in prod and 
+    #removed from dev.
+    precedence:
+      #leave it alone!
+      - "prod"
+      - "tests"
+      - "dev"
 
   unmatched:
     #any code directory that isn't matched goes here.
@@ -105,6 +112,7 @@ PackageBucketTracker:
     dev:
       - dev
       - tests
+
 
 ##################
 # Note:  `pass` is used as a placeholder for actual package names
