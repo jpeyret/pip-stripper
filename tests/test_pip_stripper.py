@@ -8,6 +8,7 @@ import unittest
 import pdb
 import sys
 import shutil
+from glob import glob
 
 from pip_stripper._pip_stripper import Main, __file__ as _mainfile
 from pip_stripper.matching import Matcher
@@ -18,7 +19,6 @@ from yaml import safe_load as yload
 import tempfile
 
 undefined = object()
-
 
 
 def build_args(**kwargs):
@@ -106,7 +106,6 @@ class Test_Bad_options(Base):
             if cpdb(): pdb.set_trace()
             raise
 
-from glob import glob
 
 class WriterMixin(object):
 
