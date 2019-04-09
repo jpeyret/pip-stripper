@@ -31,6 +31,8 @@ from pip_stripper._baseutils import (
     sub_template,
 )
 
+from pip_stripper.writers import ScanWriter
+
 from yaml import safe_load as yload, dump
 
 
@@ -88,6 +90,8 @@ class Main(object):
 
             for k, v in section.items():
                 self.vars.update(**{"%s_%s" % (sectionname, k): v})
+
+            self.scanwriter = ScanWriter(self)
 
             if rpdb():
                 pdb.set_trace()
@@ -264,12 +268,27 @@ class ClassifierImport(object):
             self.fnp_importscan = os.path.join(
                 self.mgr.workdir, mgr.config["vars"]["filenames"]["scan"]
             )
+            if rpdb():
+                pdb.set_trace()
+
+            fnp_liststdlib = os.path.join(
+                self.mgr.workdir, mgr.config["vars"]["filenames"]["liststdlib"]
+            )
+
+            self.s_untracked = set(self.mgr.config.get("untracked", []))
+
+            with open(fnp_liststdlib) as fi:
+                self.s_stdlib = set([line.strip() for line in fi if line.strip()])
+
+            bucketnames_tracker = self.config["buckets"]["precedence"]
+
+            self.packagetracker = PackageBucketTracker(self, bucketnames_tracker)
 
             self.workdir = self.mgr.workdir
 
             self.patre_splitline = re.compile(self.config["pattern_splitline"])
 
-            for key, li_pattern in self.config.items():
+            for key, li_pattern in self.config["regex_dirs"].items():
                 bucket = DirectoryPartitionerBucket(key)
                 for pattern in li_pattern:
                     bucket.add(pattern)
@@ -331,7 +350,7 @@ class ClassifierImport(object):
 
             packagename = self.parse_import(import_)
 
-            pythonfile = PythonFile.get(self, self.directorypartitioner, filename)
+            pythonfile = PythonFile.get(self, self, filename)
 
             return pythonfile, packagename
 
@@ -379,6 +398,81 @@ class Scanner(object):
             if cpdb():
                 pdb.set_trace()
             raise
+
+
+class PackageBucketTracker:
+    def __init__(self, mgr, bucketnames):
+        """
+            this is a precedence mechanism
+            if bucketnames : prod, dev
+            then a packagename gets move from dev to prod
+            if it was in dev but then gets used in prod
+
+        """
+        self.mgr = mgr
+        self.bucketnames = bucketnames.copy()
+        self.di_packagename = {}
+
+        self.di_bucketindex = {}
+        for ix, bucketname in enumerate(self.bucketnames):
+            self.di_bucketindex[bucketname] = ix
+
+    def get_package(self, packagename):
+        return self.di_packagename.get(packagename)
+
+    def add_import(self, packagename, bucketname):
+        try:
+            bucketname_prev = self.di_packagename.get(packagename)
+            if not bucketname_prev:
+                # first time, just put it in
+                self.di_packagename[packagename] = bucketname
+                return
+
+            if bucketname == bucketname_prev:
+                # same as before, nothing to do
+                return
+
+            index_new = self.di_bucketindex[bucketname]
+            index_old = self.di_bucketindex[bucketname_prev]
+
+            if index_new < index_old:
+                # higher precendence for new (ex:  prod beats dev)
+                self.di_packagename[packagename] = bucketname
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+    def classify(self):
+        di_result = defaultdict(list)
+
+        for packagename, bucketname in self.di_packagename.items():
+            di_result[bucketname].append(packagename)
+
+        return di_result
+
+    def report(self):
+        classification = self.classify()
+        lines = []
+
+        di_buckets = {}
+        di = dict(package_imports=di_buckets)
+
+        for bucketname in self.bucketnames:
+            lines.append("%s:" % (bucketname))
+            li = classification[bucketname]
+            li.sort()
+            # for import_ in li:
+            #     lines.append("  %s" % (import_))
+            di_buckets[bucketname] = li
+
+            lines_extend(self.mgr, lines, bucketname, li)
+
+        if self.mgr.fo:
+            dump(di, self.mgr.fo, default_flow_style=False)
+            self.mgr.fo.write("\n")
+
+        print("\n".join(lines))
 
 
 class Command(object):

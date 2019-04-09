@@ -70,6 +70,13 @@ class Base(unittest.TestCase):
         """Tear down test fixtures, if any."""
         os.chdir(self.oldpwd)
 
+    def get_label(self):
+        sself = "%s" % (self)
+        method_, class_ = sself.split()
+        class_ = class_.split(".")[1][:-1]
+
+        return "%s.%s" % (class_, method_)
+
 
 class Test_Bad_options(Base):
     """Tests for `pip_stripper` package."""
@@ -126,8 +133,23 @@ class WriterMixin(object):
     @property
     def testdir(self):
         if self._testdir is None:
-            prefix = self.baseprefix + (".%s" % (self.prefix) if self.prefix else "")
-            self._testdir = tempfile.mkdtemp(prefix=prefix)
+            # raise NotImplementedError("%s.testdir(%s)" % (self, locals()))
+            # pdb.set_trace()
+
+            testdir_base = os.getenv("pip_stripper_testdir")
+            if testdir_base:
+                pdb.set_trace()
+
+                testdir = os.path.join(testdir_base, self.get_label())
+                if not os.path.exists(testdir):
+                    os.makedirs(testdir)
+
+                self._testdir = testdir
+            else:
+                prefix = self.baseprefix + (
+                    ".%s" % (self.prefix) if self.prefix else ""
+                )
+                self._testdir = tempfile.mkdtemp(prefix=prefix)
 
         return self._testdir
 
@@ -172,7 +194,7 @@ class TestPip_Scan(WriterMixin, Base):
 
     dn_seed = "tst.seedworkdir01/py"
 
-    testdir = "/Users/jluc/kds2/issues2/067.pip-stripper/001.start"
+    # testdir = "/Users/jluc/kds2/issues2/067.pip-stripper/001.start"
 
     def setUp(self):
         super(TestPip_Scan, self).setUp()
@@ -181,10 +203,10 @@ class TestPip_Scan(WriterMixin, Base):
     def test_001_scan(self):
         try:
             options = self.parser.parse_args(["--init", "--workdir", self.workdir])
-            mgr = Main(options)
+            self.mgr = Main(options)
             if rpdb():
                 pdb.set_trace()
-            mgr.process()
+            self.mgr.process()
 
         except (Exception,) as e:
             if cpdb():
