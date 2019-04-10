@@ -7,7 +7,6 @@ from string import Template
 logger = logging.getLogger(__name__)
 
 
-
 try:
     from cStringIO import StringIO  # 223ed
 except (ImportError,) as e:
@@ -39,8 +38,22 @@ def set_rpdb(rpdb, remove=False, recurse=True):
 
 
 def set_cpdb(cpdb, remove=False, recurse=True, boolvalue=None):
+
+    # !!!TODO!!!p4 - stop handling --pdb and consider it reserved
+
+    single_use_flag = "--cpdb"
+
+    flags = set(["--cpdbmany", "--cpdbonce", single_use_flag])
+    args = set(sys.argv)
+
+    # print("sys.argv#20", id(sys.argv), sys.argv, id(sys.argv))
+
+    single_use_flag = "once" if single_use_flag in sys.argv else False
+
+    found = single_use_flag or (args & flags)
+
     if boolvalue is None:
-        boolvalue = "--cpdb" in sys.argv
+        boolvalue = getattr(cpdb, "enabled", False) or found
 
     if boolvalue:
         cpdb.enabled = boolvalue
@@ -52,11 +65,18 @@ def set_cpdb(cpdb, remove=False, recurse=True, boolvalue=None):
                     module.cpdb = cpdb
                 except AttributeError:
                     pass
-        if remove:
+    # import pdb
+    # pdb.set_trace()
+    if remove:
+        # pdb.set_trace()
+        for flag in flags:
             try:
-                sys.argv.remove("--cpdb")
+                sys.argv.remove(flag)
             except (ValueError,) as e:
                 pass
+                # print("couldnt remove:%s:" % (flag) )
+                # print("sys.argv#250", id(sys.argv), sys.argv)
+    # print("sys.argv#29", id(sys.argv), sys.argv, id(sys.argv))
 
 
 def ppp(o, header=None):
@@ -222,6 +242,7 @@ def fill_template(tmpl, *args):  #!!!TODO!!! _baseutils
         logger.debug("tmpl:%s,args:%s" % (tmpl, args))
         raise
 
+
 def sub_template(tmpl, *args):
     if isinstance(tmpl, basestring_):
         tmpl = Template(tmpl)
@@ -325,11 +346,13 @@ class RescueDict(object):
         self.li_used.append(key)
         return self.template % dict(key=key, placeholder=self.placeholder)
 
+
 def cpdb(**kwds):
     if cpdb.enabled == "once":
         cpdb.enabled = False
         return True
     return cpdb.enabled
+
 
 cpdb.enabled = False
 

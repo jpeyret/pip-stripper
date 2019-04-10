@@ -21,6 +21,7 @@ vars:
     pipdeptree: "tmp.pip-stripper.pipdeptree.rpt"
     liststdlib: "tmp.pip-stripper.liststdlib.rpt"
     scan: "pip-stripper.scan.yaml"
+    log: "pip-stripper.log"
 
 
 
@@ -135,6 +136,8 @@ workdir: %(workdir)s
 ClassifierPip:
 
   #the following are used to "hardcode" package names to given buckets.
+
+  pattern_splitline: "=="
 
   buckets:
 

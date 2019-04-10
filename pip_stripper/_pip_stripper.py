@@ -34,6 +34,7 @@ from pip_stripper._baseutils import (
 
 from pip_stripper.writers import ScanWriter
 from pip_stripper.matching import Matcher
+from pip_stripper.pip import ClassifierPip
 
 from yaml import safe_load as yload, dump
 
@@ -124,21 +125,23 @@ class Main(object):
                 self.import_classifier = ClassifierImport(self)
                 self.import_classifier.run()
 
-                pips = self.pip_classifier = ClassifierPip(self)
-                # pdb.set_trace()
-                # di_bucket={'workstation': set(), 'prod': {'psycopg2'}, 'tests': {'pyquery'}, 'dev': set()}
-
-                # for name in self.li_pip:
-                for set_ in pips.di_bucket.values():
-                    [self.matcher.pip.feed(name) for name in set_]
-
                 for name in self.import_classifier.packagetracker.di_packagename:
                     self.matcher.imp.feed(name)
+
+                pips = self.pip_classifier = ClassifierPip(self)
+
+                pips.load()
+                for set_ in pips.di_bucket.values():
+                    [self.matcher.pip.feed(name) for name in set_]
 
                 self.matcher.do_match()
 
                 self.aliases = self.matcher.di_pip_imp.copy()
                 self.aliases.update(**self.config.get("hardcoded_aliases", {}))
+
+                pips.run(self.import_classifier.packagetracker)
+
+                # for name in self.li_pip:
 
                 self.scanwriter.write()
 
@@ -149,6 +152,18 @@ class Main(object):
 
     DN = os.path.dirname(__file__)
     FN_CONFIG = "pip-stripper.yaml"
+
+    _s_stdlib = None
+
+    @property
+    def s_stdlib(self):
+
+        if self._s_stdlib is None:
+
+            self._s_stdlib = liststdlib()
+            self._s_stdlib |= set(self.config.get("extra_stdlib", []))
+
+        return self._s_stdlib
 
     @classmethod
     def getOptParser(cls):
@@ -230,17 +245,11 @@ class Main(object):
             raise
 
 
-def liststdlib(fnp_out, toponly=True, mgr=None):
+def liststdlib():
     """
     pretty grungy code, will need a rework
     """
-
-    extra_stdlib = []
-    if mgr:
-        extra_stdlib = mgr.config.get("extra_stdlib", [])
-
-    if toponly:
-        listed = set(extra_stdlib)
+    listed = set()
 
     std_lib = sysconfig.get_python_lib(standard_lib=True)
     for top, dirs, files in os.walk(std_lib):
@@ -248,15 +257,10 @@ def liststdlib(fnp_out, toponly=True, mgr=None):
             if nm != "__init__.py" and nm[-3:] == ".py":
                 found = os.path.join(top, nm)[len(std_lib) + 1 : -3].replace("\\", ".")
 
-                if toponly:
-                    found = found.split("/")[0]
-                    if found in listed:
-                        continue
-                    listed.add(found)
+                found = found.split("/")[0]
+                listed.add(found)
 
-    with open(fnp_out, "w") as fo:
-        for line in sorted(listed):
-            fo.write("%s\n" % (line))
+    return listed
 
 
 class DirectoryPartitionerBucket:
@@ -338,10 +342,7 @@ class ClassifierImport(object):
         try:
             # raise NotImplementedError("%s.run(%s)" % (self, locals()))
 
-            fnp_liststdlib = self.mgr._get_fnp("liststdlib")
-
-            with open(fnp_liststdlib) as fi:
-                self.s_stdlib = set([line.strip() for line in fi if line.strip()])
+            self.s_stdlib = self.mgr.s_stdlib
 
             with open(self.fnp_importscan) as fi:
                 for line in fi.readlines():
@@ -421,7 +422,6 @@ class Scanner(object):
             fnp_out = os.path.join(
                 self.mgr.workdir, self.mgr.config["vars"]["filenames"]["liststdlib"]
             )
-            liststdlib(fnp_out, toponly=True, mgr=self.mgr)
         except (Exception,) as e:
             if cpdb():
                 pdb.set_trace()
@@ -585,87 +585,6 @@ class PythonFile:
             bucket = directorypartitioner.classify_filename(filename)
             res = cls.di_filename[filename] = cls(filename, bucket)
             return res
-
-        except (Exception,) as e:
-            if cpdb():
-                pdb.set_trace()
-            raise
-
-
-class ClassifierPip(object):
-    def __repr__(self):
-        return self.__class__.__name__
-
-    def __init__(self, mgr):
-        try:
-            self.mgr = mgr
-            self.config = self.mgr.config.get(self.__class__.__name__)
-
-            self.di_bucket = self.config["buckets"]
-            for k, v in self.di_bucket.items():
-                s_ = self.di_bucket[k] = set(v)
-                try:
-                    s_.remove("pass")
-                except (KeyError,) as e:
-                    pass
-
-        except (Exception,) as e:
-            if cpdb():
-                pdb.set_trace()
-            raise
-
-    def run(self, packagetracker):
-
-        try:
-            self.s_directinstall = set()
-            for line in self.data.split("\n"):
-                if line.startswith(" "):
-                    continue
-                if not line.strip():
-                    continue
-
-                packagename, version = self.patre_splitline.split(line)
-
-                self.s_directinstall.add(packagename)
-
-            di_packagename2pip = self.mgr.di_packagename2pip
-
-            for packagename_ in self.s_directinstall:
-                packagename = packagename_.replace("-", "_")
-                if packagename.startswith("django_"):
-                    packagename = packagename.replace("django_", "")
-
-                if packagename_ != packagename:
-                    di_packagename2pip[packagename_] = packagename
-
-                # if packagetracker.get_package(packagename):
-                bucketname = packagetracker.get_package(packagename)
-                if bucketname:
-                    self.di_bucket[bucketname].add(packagename)
-                    continue
-
-                if packagename in self.s_prod:
-                    self.di_bucket["prod"].add(packagename)
-                    continue
-
-                if packagename in self.s_prodsettings:
-                    self.s_prodsettings.remove(packagename)
-                    self.di_bucket["prod"].add(packagename)
-                    continue
-
-                if packagename in self.s_workstation:
-                    continue
-
-                if packagename in self.s_devsettings:
-                    continue
-
-                self.s_unknown.add(packagename)
-
-            self.di_bucket["prod"] = self.di_bucket["prod"] | self.s_prodsettings
-
-            self.s_unknown = (
-                self.s_unknown - self.di_bucket["prod"] - self.di_bucket["dev"]
-            )
 
         except (Exception,) as e:
             if cpdb():
