@@ -51,6 +51,8 @@ dn_test = os.path.dirname(__file__)
 from pip_stripper._baseutils import set_cpdb, ppp, debugObject, set_rpdb
 
 FN_IMPORTS_GREP = "tmp.pip-stripper.imports.rpt"
+FN_SCAN = "pip-stripper.scan.yaml"
+BASEPREFIX = "tmp.pip_stripper"
 
 
 class Base(unittest.TestCase):
@@ -148,7 +150,7 @@ class Test_Bad_options(Base):
 
 class WriterMixin(object):
 
-    baseprefix = "tmp.pip_stripper"
+    baseprefix = BASEPREFIX
     prefix = ""
     _testdir = None
 
@@ -263,6 +265,9 @@ class TestPip_Init(WriterMixin, Base):
 class BasePip_Scan(WriterMixin, Base):
     pass
 
+    # this is used to run scan only once
+    fn_marker = FN_SCAN
+
     def setUp(self):
         super(BasePip_Scan, self).setUp()
         self.workdir = self.seed()
@@ -305,9 +310,6 @@ class BasePip_Scan(WriterMixin, Base):
 class TestPip_Scan(BasePip_Scan):
 
     dn_seed = "tst.seedworkdir01/py"
-
-    # this is used to run scan only once
-    fn_marker = "pip-stripper.scan.yaml"
 
     # celery is a from-only, django is an import-only
     exp_imports = ["jinja2", "django", "celery"]
