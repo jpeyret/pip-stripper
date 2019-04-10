@@ -10,6 +10,7 @@ from traceback import print_exc as xp
 import pdb
 
 from pip_stripper._baseutils import ppp, cpdb
+from pip_stripper.common import enforce_set_precedence
 
 
 class ClassifierPip(object):
@@ -24,13 +25,38 @@ class ClassifierPip(object):
 
             self.patre_splitline = re.compile(self.config["pattern_splitline"])
 
-            self.di_bucket = self.config["buckets"]
-            for k, v in self.di_bucket.items():
-                s_ = self.di_bucket[k] = set(v)
+            self.di_bucket_association = self.config["buckets"]
+            self.di_bucket = {}
+            for k, v in self.di_bucket_association.items():
+                self.di_bucket[k] = set()
+                s_ = self.di_bucket_association[k] = set(v)
                 try:
                     s_.remove("pass")
                 except (KeyError,) as e:
                     pass
+
+            self.bucket_precedence = self.config["bucket_precedence"]
+
+            # remove entries in lower precedence positions that
+            # exist higher up
+            li = []
+            for bucketname in self.bucket_precedence:
+                li.append(self.di_bucket_association[bucketname])
+            enforce_set_precedence(li)
+
+            self.warnings = self.config["warnings"]
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+    def parse_requirement_line(self, line):
+        try:
+            packagename, version = self.patre_splitline.split(line)
+            return packagename
+        except ValueError:
+            raise
 
         except (Exception,) as e:
             if cpdb():
@@ -41,9 +67,9 @@ class ClassifierPip(object):
         try:
             fnp = self.mgr._get_fnp("pipdeptree")
             with open(fnp) as fi:
-                self.data = fi.read()
+                data = fi.read()
 
-            for line in self.data.split("\n"):
+            for line in data.split("\n"):
                 if line.startswith(" "):
                     continue
                 if not line.strip():
@@ -65,46 +91,54 @@ class ClassifierPip(object):
 
         try:
 
-            di_packagename2pip = self.mgr.di_packagename2pip
+            di_packagename2pip = self.mgr.imp2pip
+            all_imports = self.mgr.all_imports
 
-            for packagename_ in self.s_directinstall:
-                packagename = packagename_.replace("-", "_")
-                if packagename.startswith("django_"):
-                    packagename = packagename.replace("django_", "")
+            self.s_missing_imports = all_imports.copy()
 
-                if packagename_ != packagename:
-                    di_packagename2pip[packagename_] = packagename
+            packagename = packagename_ = None
+            pip2imp = self.mgr.pip2imp
+
+            for pipname in self.mgr.all_pips:
+
+                packagename = pip2imp.get(pipname, pipname)
+
+                found = False
+                for bucketname in self.bucket_precedence:
+                    if pipname in self.di_bucket_association[bucketname]:
+                        self.di_bucket[bucketname].add(pipname)
+                        found = True
+                        try:
+                            self.s_missing_imports.remove(packagename)
+                        except (KeyError,) as e:
+                            pass
+                        break
+
+                if found:
+                    continue
 
                 # if packagetracker.get_package(packagename):
                 bucketname = packagetracker.get_package(packagename)
                 if bucketname:
-                    self.di_bucket[bucketname].add(packagename)
+                    self.di_bucket[bucketname].add(pipname)
+                    try:
+                        self.s_missing_imports.remove(packagename)
+                    except (KeyError,) as e:
+                        pass
                     continue
 
-                if packagename in self.s_prod:
-                    self.di_bucket["prod"].add(packagename)
-                    continue
+                self.di_bucket["unknown"].add(pipname)
 
-                if packagename in self.s_prodsettings:
-                    self.s_prodsettings.remove(packagename)
-                    self.di_bucket["prod"].add(packagename)
-                    continue
+            # self.di_bucket["prod"] = self.di_bucket["prod"] | self.s_prodsettings
 
-                if packagename in self.s_workstation:
-                    continue
-
-                if packagename in self.s_devsettings:
-                    continue
-
-                self.s_unknown.add(packagename)
-
-            self.di_bucket["prod"] = self.di_bucket["prod"] | self.s_prodsettings
-
-            self.s_unknown = (
-                self.s_unknown - self.di_bucket["prod"] - self.di_bucket["dev"]
-            )
+            # self.s_unknown = (
+            #     self.s_unknown - self.di_bucket["prod"] - self.di_bucket["dev"]
+            # )
+            for import_ in self.s_missing_imports:
+                self.warnings.append("missing import:%s" % (import_))
 
         except (Exception,) as e:
             if cpdb():
+                ppp(dict(packagename=packagename, packagename_=packagename_))
                 pdb.set_trace()
             raise

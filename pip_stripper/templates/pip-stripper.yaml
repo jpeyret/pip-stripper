@@ -81,13 +81,14 @@ ClassifierImport:
   buckets:
 
     #this basically says, if module `x` is found in several buckets then put 
-    #it in the highest one.  i.e. `jinja2` in prod AND dev is put in prod and 
-    #removed from dev.
+    #it in the highest one.  i.e. `jinja2` in prod AND dev is 
+    #only kept in prod
     precedence:
       #leave it alone!
       - "prod"
       - "tests"
       - "dev"
+      - "workstation"
 
   unmatched:
     #any code directory that isn't matched goes here.
@@ -99,11 +100,9 @@ ClassifierImport:
     # uncomment workstation and dev if you want to partition certain directories
     # into those buckets.  remember, this is a first-match regex
 
-    # workstation:
-    #   - pass
+    workstation: []
 
-    # dev:
-    #   - pass
+    dev: []
 
     tests:
       - "^tests/"
@@ -135,11 +134,23 @@ workdir: %(workdir)s
 
 ClassifierPip:
 
-  #the following are used to "hardcode" package names to given buckets.
 
   pattern_splitline: "=="
 
+  bucket_precedence:
+    - prod
+    - tests
+    - dev
+    - workstation
+
+  #you typically dont want anything here
+  warnings: []
+
+  #the following are used to "hardcode" package names to given buckets.
   buckets:
+
+    #dont put anything in unknown here...!
+    unknown: []
 
     workstation:
       # mostly modules that are used to develop/audit even if they dont
@@ -147,12 +158,15 @@ ClassifierPip:
       # so you may have installed say `ansible` to build servers, but it makes
       # no sense to install `ansible` on those servers
       - pass 
+      - PyQt5
+      - PyQt5-sip
 
     prod:
       # enter packages that you _know_ you want to put in `requirements.prod.txt` but are not
       # getting picked up for some reason.  `psycopg2` doesn't show up an `import` of a Django
       # site using postgresql but is still required.
       - psycopg2
+      - cx-Oracle
 
     tests:
       # enter packages that are need for tests.  `pytest` might be an example.

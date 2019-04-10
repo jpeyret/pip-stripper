@@ -51,12 +51,22 @@ class ScanWriter(object):
             if rpdb():
                 pdb.set_trace()
 
+            pips = self.mgr.pip_classifier.di_bucket.copy()
+
+            for k, v in pips.items():
+                pips[k] = sorted(v)
+
+            warnings = self.mgr.pip_classifier.warnings
+
             self.di = dict(
                 imports=self.mgr.import_classifier.packagetracker.classify(),
-                pips=dict(dev="dev", prod="prod", tests="tests"),
+                pips=pips,
                 aliases=self.mgr.aliases,
-                stdlib=[],
+                warnings=warnings,
             )
+
+            if self.mgr.options.verbose:
+                self.di[stdlib] = (sorted(self.mgr.s_stdlib),)
 
             with open(self.fnp_yaml, "w", encoding="utf-8") as fo:
                 dump(self.di, fo, default_flow_style=False)

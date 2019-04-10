@@ -96,7 +96,7 @@ class Main(object):
             #
             self.vars = dict()
 
-            self.vars["scandir"] = self.options.workdir
+            self.vars["scandir"] = self.workdir
 
             di_tmp = self.config.get("")
 
@@ -134,11 +134,6 @@ class Main(object):
                 for set_ in pips.di_bucket.values():
                     [self.matcher.pip.feed(name) for name in set_]
 
-                self.matcher.do_match()
-
-                self.aliases = self.matcher.di_pip_imp.copy()
-                self.aliases.update(**self.config.get("hardcoded_aliases", {}))
-
                 pips.run(self.import_classifier.packagetracker)
 
                 # for name in self.li_pip:
@@ -164,6 +159,65 @@ class Main(object):
             self._s_stdlib |= set(self.config.get("extra_stdlib", []))
 
         return self._s_stdlib
+
+    _aliases = _imp2pip = None
+
+    @property
+    def imp2pip(self):
+        if self._imp2pip is None:
+
+            self._imp2pip = {v: k for k, v in self.aliases.items()}
+
+        return self._imp2pip
+
+    @property
+    def aliases(self):
+        if self._aliases is None:
+            self._aliases = Matcher.match_all(self)
+
+            # self._aliases = self.matcher.di_pip_imp.copy()
+            self._aliases.update(**self.config.get("hardcoded_aliases", {}))
+
+        return self._aliases
+
+    pip2imp = aliases
+
+    # (Pdb) ppp(self.mgr.import_classifier.packagetracker.di_packagename)
+
+    # [<class 'dict'> {'dateutil...] ''
+    # dateutil='prod'
+    # django='prod'
+    # jinja2='prod'
+    # pyquery='prod'
+
+    _all_imports = None
+
+    @property
+    def all_imports(self):
+        if self._all_imports is None:
+            self._all_imports = set(
+                self.import_classifier.packagetracker.di_packagename
+            )
+
+        return self._all_imports
+
+    _all_pips = None
+
+    @property
+    def all_pips(self):
+        if self._all_pips is None:
+            self._all_pips = set()
+            fnp = self._get_fnp("freeze")
+            with open(fnp) as fi:
+                for line in fi.readlines():
+                    try:
+                        packagename = self.pip_classifier.parse_requirement_line(line)
+                    except (ValueError,) as e:
+                        logger.warning("could not parse packagename on %s" % (line))
+                        continue
+                    self._all_pips.add(packagename)
+
+        return self._all_pips
 
     @classmethod
     def getOptParser(cls):
@@ -352,11 +406,13 @@ class ClassifierImport(object):
                     #     pdb.set_trace()
 
                     if packagename in self.s_stdlib:
-                        logger.info("%s in std lib" % (packagename))
+                        if self.mgr.options.verbose:
+                            logger.info("%s in std lib" % (packagename))
                         continue
 
                     if packagename in self.s_untracked:
-                        logger.info("%s in std lib" % (packagename))
+                        if self.mgr.options.verbose:
+                            logger.info("%s in std lib" % (packagename))
                         continue
 
                     self.packagetracker.add_import(packagename, filebucket.bucket.name)

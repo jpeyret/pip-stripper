@@ -1,10 +1,13 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def cpdb(**kwds):
     cpdb.enabled = False
 
 
 class Matcher(object):
-
     def __init__(self):
 
         self.pip = Side("pip", _variations_pip)
@@ -12,9 +15,26 @@ class Matcher(object):
 
         self.di_pip_imp = dict()
 
+    @classmethod
+    def match_all(cls, mgr):
+        try:
+            inst = cls()
+            for imp in mgr.all_imports:
+                inst.imp.feed(imp)
+            for pip in mgr.all_pips:
+                inst.pip.feed(pip)
+
+            inst.do_match()
+            return inst.di_pip_imp
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
     def do_match(self):
         try:
-        
+
             self.matches = self.pip.s_alias & self.imp.s_alias
 
             for match in self.matches:
@@ -24,11 +44,12 @@ class Matcher(object):
                 self.di_pip_imp[pip] = imp
 
         except (Exception,) as e:
-            if cpdb(): pdb.set_trace()
+            if cpdb():
+                pdb.set_trace()
             raise
 
-class Side(object):
 
+class Side(object):
     def __repr__(self):
         return self.subject
 
@@ -56,8 +77,9 @@ class Side(object):
             return res
 
         except (Exception,) as e:
-            if cpdb(): pdb.set_trace()
-            raise        
+            if cpdb():
+                pdb.set_trace()
+            raise
 
     def feed(self, name):
         try:
@@ -65,28 +87,25 @@ class Side(object):
 
             aliases = self.get_aliases(name)
 
-            #check for duplicates:
+            # check for duplicates:
             dup = self.s_alias & aliases
             if dup:
-                raise NotImplementedError("%s. alias duplicates:%s " % (self, dup))
+                msg = "%s. alias duplicates:%s " % (self, dup)
+                # raise NotImplementedError()
+                logger.error(msg)
 
             self.s_alias |= aliases
 
-            self.di_alias.update(**{k:entry for k in aliases})
+            self.di_alias.update(**{k: entry for k in aliases})
 
         except (Exception,) as e:
-            if cpdb(): pdb.set_trace()
+            if cpdb():
+                pdb.set_trace()
             raise
 
 
-_variations = [
-    str,
-]
+_variations = [str]
 
-_variations_pip = _variations + [
-    lambda x: x.split("-")[1],
-]
+_variations_pip = _variations + [lambda x: x.split("-")[1]]
 
-_variations_imp = _variations + [
-    lambda x: x.split("_")[1],
-]
+_variations_imp = _variations + [lambda x: x.split("_")[1]]

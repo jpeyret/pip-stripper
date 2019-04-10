@@ -12,6 +12,7 @@ from glob import glob
 
 from pip_stripper._pip_stripper import Main, __file__ as _mainfile, Command
 from pip_stripper.matching import Matcher
+from pip_stripper.common import enforce_set_precedence
 from traceback import print_exc as xp
 
 from yaml import safe_load as yload
@@ -290,6 +291,42 @@ class TestMatchingBase(unittest.TestCase):
             ppp(self.matcher, "%s.matcher" % (self))
             ppp(self.matcher.pip, "pip")
             ppp(self.matcher.imp, "imp")
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+
+class TestSetPrecedence(Base):
+    def test_001_std(self):
+        try:
+            prod = set("prod")
+            tests = set("tests")
+            dev = set("dev")
+
+            exp = dict(prod=set("prod"), tests=set("tes"), dev=set("v"))
+
+            enforce_set_precedence(prod, tests, dev)
+
+            got = dict(prod=prod, tests=tests, dev=dev)
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+    def test_002_only_dev(self):
+        try:
+            prod = set("")
+            tests = set("")
+            dev = set("dev")
+
+            exp = dict(prod=set(""), tests=set(""), dev=set("dev"))
+
+            enforce_set_precedence(prod, tests, dev)
+
+            got = dict(prod=prod, tests=tests, dev=dev)
+
+        except (Exception,) as e:
             if cpdb():
                 pdb.set_trace()
             raise
