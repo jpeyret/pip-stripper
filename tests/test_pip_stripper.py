@@ -50,6 +50,8 @@ dn_test = os.path.dirname(__file__)
 
 from pip_stripper._baseutils import set_cpdb, ppp, debugObject, set_rpdb
 
+FN_IMPORTS_GREP = "tmp.pip-stripper.imports.rpt"
+
 
 class Base(unittest.TestCase):
     testdir = None
@@ -153,11 +155,12 @@ class WriterMixin(object):
     @property
     def testdir(self):
         if self._testdir is None:
+            # pdb.set_trace()
             testdir = os.path.join(Base.testdir_base, self.get_label())
             if not os.path.exists(testdir):
                 os.makedirs(testdir)
 
-            self._testdir = testdir
+            self.__class__._testdir = testdir
 
         return self._testdir
 
@@ -169,11 +172,31 @@ class WriterMixin(object):
 
             if not os.path.exists(dn_tgt):
                 shutil.copytree(dn_src, dn_tgt)
-            mask = os.path.join(self.testdir, "*")
+            # mask = os.path.join(self.testdir, "*")
 
-            print(glob(mask))
+            # print(glob(mask))
             return dn_tgt
 
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+    def has_run(self, fn_marker=None):
+        try:
+            fn_marker = fn_marker or self.fn_marker
+            fnp_marker = os.path.join(self.testdir, fn_marker)
+            return os.path.exists(fnp_marker)
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+    def get_file(self, fn, mode="r"):
+        try:
+            fnp = os.path.join(self.mgr.workdir, fn)
+            return open(fnp, mode)
         except (Exception,) as e:
             if cpdb():
                 pdb.set_trace()
@@ -237,19 +260,19 @@ class TestPip_Init(WriterMixin, Base):
             raise
 
 
-class TestPip_Scan(WriterMixin, Base):
-
-    dn_seed = "tst.seedworkdir01/py"
-
-    # testdir = "/Users/jluc/kds2/issues2/067.pip-stripper/001.start"
+class BasePip_Scan(WriterMixin, Base):
+    pass
 
     def setUp(self):
-        super(TestPip_Scan, self).setUp()
+        super(BasePip_Scan, self).setUp()
         self.workdir = self.seed()
+
+    def get_options(self):
+        return self.parser.parse_args(["--init", "--workdir", self.workdir])
 
     def test_001_scan(self):
         try:
-            options = self.parser.parse_args(["--init", "--workdir", self.workdir])
+            options = self.get_options()
             self.mgr = Main(options)
             if rpdb():
                 pdb.set_trace()
@@ -259,6 +282,35 @@ class TestPip_Scan(WriterMixin, Base):
             if cpdb():
                 pdb.set_trace()
             raise
+
+    def test_002_greps(self):
+        try:
+            if not self.has_run():
+                self.test_001_scan()
+
+            with self.get_file(FN_IMPORTS_GREP) as fi:
+                data = fi.read()
+
+            for import_ in self.exp_imports:
+                self.assertTrue(
+                    import_ in data, "missing %s from %s" % (import_, FN_IMPORTS_GREP)
+                )
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+
+class TestPip_Scan(BasePip_Scan):
+
+    dn_seed = "tst.seedworkdir01/py"
+
+    # this is used to run scan only once
+    fn_marker = "pip-stripper.scan.yaml"
+
+    # celery is a from-only, django is an import-only
+    exp_imports = ["jinja2", "django", "celery"]
 
 
 class TestMatchingBase(unittest.TestCase):
