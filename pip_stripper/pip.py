@@ -9,7 +9,7 @@ import os
 from traceback import print_exc as xp
 import pdb
 
-from pip_stripper._baseutils import ppp, cpdb
+from pip_stripper._baseutils import ppp, cpdb, rpdb
 from pip_stripper.common import enforce_set_precedence
 
 
@@ -100,6 +100,10 @@ class ClassifierPip(object):
             pip2imp = self.mgr.pip2imp
 
             for pipname in self.mgr.all_pips:
+
+                if pipname == "pyquery":
+                    if rpdb():
+                        pdb.set_trace()
 
                 packagename = pip2imp.get(pipname, pipname)
 

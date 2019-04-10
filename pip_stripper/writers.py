@@ -58,7 +58,7 @@ class ScanWriter(object):
 
             warnings = self.mgr.pip_classifier.warnings
 
-            self.di = dict(
+            di = self.di = dict(
                 imports=self.mgr.import_classifier.packagetracker.classify(),
                 pips=pips,
                 aliases=self.mgr.aliases,
@@ -66,7 +66,12 @@ class ScanWriter(object):
             )
 
             if self.mgr.options.verbose:
-                self.di[stdlib] = (sorted(self.mgr.s_stdlib),)
+                di_debug = dict(
+                    stdlib=sorted(self.mgr.s_stdlib),
+                    all_imports=sorted(self.mgr.all_imports),
+                    all_pips=sorted(self.mgr.all_pips),
+                )
+                di["zzz_debug"] = di_debug
 
             with open(self.fnp_yaml, "w", encoding="utf-8") as fo:
                 dump(self.di, fo, default_flow_style=False)

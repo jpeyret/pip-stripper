@@ -288,6 +288,8 @@ class BasePip_Scan(WriterMixin, Base):
                 pdb.set_trace()
             raise
 
+    exp_imports = []
+
     def test_002_greps(self):
         try:
             if not self.has_run():
@@ -306,6 +308,47 @@ class BasePip_Scan(WriterMixin, Base):
                 pdb.set_trace()
             raise
 
+    exp_tests_requirements = []
+
+    def test_0031_import_tracker(self):
+        try:
+            if not self.has_run():
+                self.test_001_scan()
+
+            exp = "tests"
+
+            for req in self.exp_tests_requirements:
+
+                got = self.mgr.import_classifier.packagetracker.di_packagename[req]
+
+                self.assertEqual(exp, got, "%s:exp:%s<>%s:got" % (req, exp, got))
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+    def test_0032_test_bucket(self):
+        try:
+            if not self.has_run():
+                self.test_001_scan()
+
+            with self.get_file(FN_SCAN) as fi:
+                data = yload(fi)
+
+            got_all = data["pips"]["tests"]
+            t_msg = "missing %s from %s.%s"
+
+            for exp in self.exp_tests_requirements:
+
+                found = self.mgr.import_classifier.packagetracker.di_packagename[exp]
+
+                msg = t_msg % (exp, FN_SCAN, ":pips/tests/")
+                self.assertTrue(exp in got_all, msg)
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
 
 class TestPip_Scan(BasePip_Scan):
 
@@ -313,6 +356,7 @@ class TestPip_Scan(BasePip_Scan):
 
     # celery is a from-only, django is an import-only
     exp_imports = ["jinja2", "django", "celery"]
+    exp_tests_requirements = ["pyquery"]
 
 
 class TestMatchingBase(unittest.TestCase):

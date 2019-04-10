@@ -168,9 +168,8 @@ ClassifierPip:
       - psycopg2
       - cx-Oracle
 
-    tests:
+    tests: []
       # enter packages that are need for tests.  `pytest` might be an example.
-      - pyquery
 
     dev:
       # enter packages that are need for dev.  in practice, tests and dev are mapped the 
