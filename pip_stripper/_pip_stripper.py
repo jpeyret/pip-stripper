@@ -563,12 +563,12 @@ class PackageBucketTracker:
 
 
 class Command(object):
-    def __init__(self, mgr, taskname, config, append=False):
+    def __init__(self, mgr, taskname, config):
         self.mgr = mgr
         self.taskname = taskname
-        self.append = append
 
         self.config = config
+        self.append = self.config.get("append", False)
         self.stderr = ""
 
     def write(self, msg):
