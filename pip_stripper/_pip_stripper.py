@@ -52,7 +52,10 @@ class Main(object):
 
     def _get_fnp(self, subject):
         try:
-            fn = self.config["vars"]["filenames"][subject]
+            if subject == "log":
+                fn = "pip-stripper.log"
+            else:
+                fn = self.config["vars"]["filenames"][subject]
             return os.path.join(self.workdir, fn)
         except (Exception,) as e:
             if cpdb():
@@ -520,6 +523,8 @@ class Command(object):
             t_cmd = self.config["cmdline"]  # .replace(r"\\","\\")
             t_fnp = os.path.join(self.mgr.workdir, self.config["filename"])
 
+            fnp_log = "subprocess.log"
+
             cmd = sub_template(t_cmd, self, self.mgr.vars)
 
             fnp_o = sub_template(t_fnp, self, self.mgr.vars)
@@ -528,14 +533,20 @@ class Command(object):
 
             mode = "a" if self.append else "w"
 
-            with open(fnp_o, mode) as fo:
-                proc = subprocess.Popen(
-                    cmd.split(),
-                    stdout=fo,
-                    stderr=subprocess.DEVNULL,
-                    cwd=self.mgr.workdir,
-                    encoding="utf-8",
-                )
+            fnp_stderr = self.mgr._get_fnp("log")
+            with open(fnp_stderr, "a") as ferr:
+
+                ferr.write("cmd: %s\nstderr begin:\n" % (cmd))
+
+                with open(fnp_o, mode) as fo:
+                    proc = subprocess.check_call(
+                        cmd.split(),
+                        stdout=fo,
+                        stderr=ferr,
+                        cwd=self.mgr.workdir,
+                        encoding="utf-8",
+                    )
+                ferr.write("stderr end\n\n")
 
         except (Exception,) as e:
             if cpdb():

@@ -196,6 +196,9 @@ class BaseCommand(WriterMixin, Base):
         try:
             command = Command(self.mgr, self.taskname, self.config)
             command.run()
+            from time import sleep
+
+            sleep(3)
             fnp = self.mgr._get_fnp(self.taskname)
             with open(fnp) as fi:
                 data = fi.read()
@@ -211,7 +214,7 @@ class TestCommandFreeze(BaseCommand):
     taskname = "freeze"
 
 
-class TestPipDepTree(BaseCommand):
+class TestCommandPipDepTree(BaseCommand):
     taskname = "pipdeptree"
 
 
