@@ -16,7 +16,6 @@ import re
 import os
 import subprocess
 import distutils.sysconfig as sysconfig
-from collections import defaultdict
 
 from traceback import print_exc as xp
 import pdb
@@ -36,6 +35,7 @@ from pip_stripper.writers import ScanWriter
 from pip_stripper.matching import Matcher
 from pip_stripper.pip import ClassifierPip
 from pip_stripper.trackimports import ClassifierImport
+from pip_stripper.common import Command
 
 from yaml import safe_load as yload, dump
 
@@ -318,30 +318,6 @@ def liststdlib():
     return listed
 
 
-class DirectoryPartitionerBucket:
-    def __init__(self, name):
-        self.name = name
-        self.li_pattern = []
-
-    def __repr__(self):
-        return "Bucket(%s)" % (self.name)
-
-    def add(self, pattern):
-        self.li_pattern.append(re.compile(pattern))
-
-    def is_match(self, filename):
-        try:
-            for patre in self.li_pattern:
-                hit = patre.search(filename)
-                if hit:
-                    return True
-            return False
-        except (Exception,) as e:
-            if cpdb():
-                pdb.set_trace()
-            raise
-
-
 class Scanner(object):
     def __init__(self, mgr):
         self.mgr = mgr
@@ -359,170 +335,6 @@ class Scanner(object):
             fnp_out = os.path.join(
                 self.mgr.workdir, self.mgr.config["vars"]["filenames"]["liststdlib"]
             )
-        except (Exception,) as e:
-            if cpdb():
-                pdb.set_trace()
-            raise
-
-
-class PackageBucketTracker:
-    def __init__(self, mgr, bucketnames):
-        """
-            this is a precedence mechanism
-            if bucketnames : prod, dev
-            then a packagename gets move from dev to prod
-            if it was in dev but then gets used in prod
-
-        """
-        self.mgr = mgr
-        self.bucketnames = bucketnames.copy()
-        self.di_packagename = {}
-
-        self.di_bucketindex = {}
-        for ix, bucketname in enumerate(self.bucketnames):
-            self.di_bucketindex[bucketname] = ix
-
-    def get_package(self, packagename):
-        return self.di_packagename.get(packagename)
-
-    def add_import(self, packagename, bucketname):
-        try:
-            bucketname_prev = self.di_packagename.get(packagename)
-            if not bucketname_prev:
-                # first time, just put it in
-                self.di_packagename[packagename] = bucketname
-                return
-
-            if bucketname == bucketname_prev:
-                # same as before, nothing to do
-                return
-
-            index_new = self.di_bucketindex[bucketname]
-            index_old = self.di_bucketindex[bucketname_prev]
-
-            if index_new < index_old:
-                # higher precendence for new (ex:  prod beats dev)
-                self.di_packagename[packagename] = bucketname
-
-            if rpdb():
-                pdb.set_trace()
-        except (Exception,) as e:
-            if cpdb():
-                pdb.set_trace()
-            raise
-
-    def classify(self):
-        di_result = defaultdict(list)
-
-        for packagename, bucketname in self.di_packagename.items():
-            di_result[bucketname].append(packagename)
-
-        return dict(**di_result)
-
-    def report(self):
-        classification = self.classify()
-        lines = []
-
-        di_buckets = {}
-        di = dict(package_imports=di_buckets)
-
-        for bucketname in self.bucketnames:
-            lines.append("%s:" % (bucketname))
-            li = classification[bucketname]
-            li.sort()
-            # for import_ in li:
-            #     lines.append("  %s" % (import_))
-            di_buckets[bucketname] = li
-
-            lines_extend(self.mgr, lines, bucketname, li)
-
-        if self.mgr.fo:
-            dump(di, self.mgr.fo, default_flow_style=False)
-            self.mgr.fo.write("\n")
-
-        print("\n".join(lines))
-
-
-class Command(object):
-    def __init__(self, mgr, taskname, config):
-        self.mgr = mgr
-        self.taskname = taskname
-
-        self.config = config
-        self.append = self.config.get("append", False)
-        self.stderr = ""
-
-    def write(self, msg):
-        self.stderr += "%s\n"
-
-    def run(self):
-        try:
-            t_cmd = self.config["cmdline"]  # .replace(r"\\","\\")
-            t_fnp = os.path.join(self.mgr.workdir, self.config["filename"])
-
-            fnp_log = "subprocess.log"
-
-            cmd = sub_template(t_cmd, self, self.mgr.vars)
-
-            fnp_o = sub_template(t_fnp, self, self.mgr.vars)
-
-            li_cmdline = cmd.split()
-
-            mode = "a" if self.append else "w"
-
-            fnp_stderr = self.mgr._get_fnp("log")
-            with open(fnp_stderr, "a") as ferr:
-
-                ferr.write("cmd: %s\nstderr begin:\n" % (cmd))
-
-                with open(fnp_o, mode) as fo:
-                    proc = subprocess.check_call(
-                        cmd.split(),
-                        stdout=fo,
-                        stderr=ferr,
-                        cwd=self.mgr.workdir,
-                        encoding="utf-8",
-                    )
-                ferr.write("stderr end\n\n")
-
-        except (Exception,) as e:
-            if cpdb():
-                pdb.set_trace()
-            raise
-
-
-class PythonFile:
-
-    di_filename = {}
-
-    def __repr__(self):
-        return "%s in %s" % (self.filename, self.bucket)
-
-    def __init__(self, filename, bucket):
-        self.filename = filename
-        self.bucket = bucket
-        self.imports = []
-
-    def add(self, import_):
-        try:
-            raise NotImplementedError()
-        except (Exception,) as e:
-            if cpdb():
-                pdb.set_trace()
-            raise
-
-    @classmethod
-    def get(cls, mgr, directorypartitioner, filename):
-        try:
-
-            res = cls.di_filename.get(filename)
-            if res:
-                return res
-
-            bucket = directorypartitioner.classify_filename(filename)
-            res = cls.di_filename[filename] = cls(filename, bucket)
-            return res
-
         except (Exception,) as e:
             if cpdb():
                 pdb.set_trace()

@@ -2,10 +2,20 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+import os
+import subprocess
+
 from traceback import print_exc as xp
 import pdb
 
-from pip_stripper._baseutils import cpdb, rpdb, ppp
+from pip_stripper._baseutils import (
+    ppp,
+    debugObject,
+    cpdb,
+    fill_template,
+    rpdb,
+    sub_template,
+)
 
 
 def enforce_set_precedence(*sets):
@@ -22,3 +32,51 @@ def enforce_set_precedence(*sets):
         prunee = sets[ix]
         for prec_idx in range(0, ix):
             prunee -= sets[prec_idx]
+
+
+class Command(object):
+    def __init__(self, mgr, taskname, config):
+        self.mgr = mgr
+        self.taskname = taskname
+
+        self.config = config
+        self.append = self.config.get("append", False)
+        self.stderr = ""
+
+    def write(self, msg):
+        self.stderr += "%s\n"
+
+    def run(self):
+        try:
+            t_cmd = self.config["cmdline"]  # .replace(r"\\","\\")
+            t_fnp = os.path.join(self.mgr.workdir, self.config["filename"])
+
+            fnp_log = "subprocess.log"
+
+            cmd = sub_template(t_cmd, self, self.mgr.vars)
+
+            fnp_o = sub_template(t_fnp, self, self.mgr.vars)
+
+            li_cmdline = cmd.split()
+
+            mode = "a" if self.append else "w"
+
+            fnp_stderr = self.mgr._get_fnp("log")
+            with open(fnp_stderr, "a") as ferr:
+
+                ferr.write("cmd: %s\nstderr begin:\n" % (cmd))
+
+                with open(fnp_o, mode) as fo:
+                    proc = subprocess.check_call(
+                        cmd.split(),
+                        stdout=fo,
+                        stderr=ferr,
+                        cwd=self.mgr.workdir,
+                        encoding="utf-8",
+                    )
+                ferr.write("stderr end\n\n")
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
