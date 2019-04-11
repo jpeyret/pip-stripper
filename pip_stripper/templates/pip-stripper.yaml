@@ -26,6 +26,7 @@ vars:
 
 
 
+
 Scanner:
   tasknames: 
     - grep_1
@@ -126,7 +127,8 @@ ClassifierImport:
 
 untracked:
   #replace with actual packages you don't want to track
-  - pass 
+  - cStringIO # 2 to  3 changes, won't find it on 3
+  - urlparse  # 2 to  3 changes, won't find it on 3
 
 workdir: %(workdir)s
 
@@ -170,13 +172,12 @@ ClassifierPip:
       - psycopg2
       - cx-Oracle
 
+    # enter packages that are need for tests.  `pytest` might be an example.
     tests: []
-      # enter packages that are need for tests.  `pytest` might be an example.
 
-    dev:
+    dev: []
       # enter packages that are need for dev.  in practice, tests and dev are mapped the 
       # same...
-      - pass
 
 hardcoded_aliases:
   #put in matches in the form...
@@ -184,3 +185,19 @@ hardcoded_aliases:
   backports.functools-lru-cache: backports.functools_lru_cache
   cached-property: cached_property
   cx-Oracle: cx_Oracle
+  PyYAML: yaml
+
+Builder:
+
+  t_filename_out: "requirements.$req.txt"
+
+  req_mapper:
+    dev:
+      buckets:
+        - dev
+        - tests
+    prod:
+      buckets:
+        - prod
+
+

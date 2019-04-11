@@ -35,6 +35,8 @@ class ClassifierPip(object):
                 except (KeyError,) as e:
                     pass
 
+            self.di_freeze = {}
+
             self.bucket_precedence = self.config["bucket_precedence"]
 
             # remove entries in lower precedence positions that

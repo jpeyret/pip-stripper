@@ -51,10 +51,12 @@ class ScanWriter(object):
             if rpdb():
                 pdb.set_trace()
 
-            pips = self.mgr.pip_classifier.di_bucket.copy()
+            pips_buckets = self.mgr.pip_classifier.di_bucket.copy()
 
-            for k, v in pips.items():
-                pips[k] = sorted(v)
+            for k, v in pips_buckets.items():
+                pips_buckets[k] = sorted(v)
+
+            pips = dict(buckets=pips_buckets, freeze=self.mgr.all_freezes)
 
             warnings = self.mgr.pip_classifier.warnings
 

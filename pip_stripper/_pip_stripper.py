@@ -36,6 +36,7 @@ from pip_stripper.matching import Matcher
 from pip_stripper.pip import ClassifierPip
 from pip_stripper.trackimports import ClassifierImport
 from pip_stripper.common import Command
+from pip_stripper.builder import Builder
 
 from yaml import safe_load as yload, dump
 
@@ -54,10 +55,7 @@ class Main(object):
 
     def _get_fnp(self, subject):
         try:
-            if subject == "log":
-                fn = "pip-stripper.log"
-            else:
-                fn = self.config["vars"]["filenames"][subject]
+            fn = self.config["vars"]["filenames"][subject]
             return os.path.join(self.workdir, fn)
         except (Exception,) as e:
             if cpdb():
@@ -99,8 +97,6 @@ class Main(object):
 
             self.vars["scandir"] = self.workdir
 
-            di_tmp = self.config.get("")
-
             sectionname = "filenames"
             section = self.config["vars"][sectionname]
 
@@ -112,6 +108,8 @@ class Main(object):
             self.scanwriter = ScanWriter(self)
 
             self.matcher = Matcher()
+
+            self.builder = Builder(self)
 
         except (ValueError,) as e:
             raise
@@ -141,6 +139,9 @@ class Main(object):
                 # for name in self.li_pip:
 
                 self.scanwriter.write()
+
+            if self.options.build:
+                self.builder.process()
 
         except (Exception,) as e:
             if cpdb():
@@ -205,12 +206,22 @@ class Main(object):
 
         return self._all_imports
 
+    _all_freezes = None
     _all_pips = None
+
+    @property
+    def all_freezes(self):
+        if self._all_freezes is None:
+            # this triggers the pips which what populates
+            # the freezes...
+            self.all_pips
+        return self._all_freezes
 
     @property
     def all_pips(self):
         if self._all_pips is None:
             self._all_pips = set()
+            self._all_freezes = {}
             fnp = self._get_fnp("freeze")
             with open(fnp) as fi:
                 for line in fi.readlines():
@@ -220,6 +231,7 @@ class Main(object):
                         logger.warning("could not parse packagename on %s" % (line))
                         continue
                     self._all_pips.add(packagename)
+                    self._all_freezes[packagename] = line
 
         return self._all_pips
 

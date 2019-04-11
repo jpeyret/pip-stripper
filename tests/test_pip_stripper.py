@@ -391,7 +391,7 @@ class BasePip_Scan(WriterMixin, Base):
             with self.get_file(FN_SCAN) as fi:
                 data = yload(fi)
 
-            got_all = data["pips"]["tests"]
+            got_all = data["pips"]["buckets"]["tests"]
             t_msg = "missing %s from %s.%s"
 
             for exp in self.exp_tests_requirements:
