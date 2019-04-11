@@ -107,6 +107,8 @@ class Main(object):
             for k, v in section.items():
                 self.vars.update(**{"%s_%s" % (sectionname, k): v})
 
+            self.import_classifier = ClassifierImport(self)
+
             self.scanwriter = ScanWriter(self)
 
             self.matcher = Matcher()
@@ -123,7 +125,6 @@ class Main(object):
             if self.options.scan:
                 self.scanner = Scanner(self)
                 self.scanner.run()
-                self.import_classifier = ClassifierImport(self)
                 self.import_classifier.run()
 
                 for name in self.import_classifier.packagetracker.di_packagename:
@@ -183,13 +184,15 @@ class Main(object):
 
     pip2imp = aliases
 
-    # (Pdb) ppp(self.mgr.import_classifier.packagetracker.di_packagename)
+    _raw_imports = None
 
-    # [<class 'dict'> {'dateutil...] ''
-    # dateutil='prod'
-    # django='prod'
-    # jinja2='prod'
-    # pyquery='prod'
+    @property
+    def raw_imports(self):
+        if self._raw_imports is None:
+            fnp = self._get_fnp("imports")
+            with open(fnp) as fi:
+                self._raw_imports = fi.readlines()
+        return self._raw_imports
 
     _all_imports = None
 

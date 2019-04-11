@@ -55,8 +55,13 @@ FN_SCAN = "pip-stripper.scan.yaml"
 BASEPREFIX = "tmp.pip_stripper"
 
 
+DN_SEED01 = "tst.seedworkdir01/py"
+
+
 class Base(unittest.TestCase):
     testdir = None
+
+    dn_seed = DN_SEED01
 
     def write(self, msg):
         """use this to test stderr"""
@@ -92,7 +97,10 @@ class Base(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test fixtures, if any."""
-        os.chdir(self.oldpwd)
+
+        oldpwd = getattr(self, "oldpwd", None)
+        if oldpwd:
+            os.chdir(oldpwd)
 
     def get_label(self):
         sself = "%s" % (self)
@@ -208,6 +216,9 @@ class WriterMixin(object):
 class BaseCommand(WriterMixin, Base):
     def setUp(self):
         try:
+            if self.__class__ in (BaseCommand,):
+                return
+
             super(BaseCommand, self).setUp()
             options = self.parser.parse_args(["--init", "--workdir", self.testdir])
 
@@ -219,12 +230,15 @@ class BaseCommand(WriterMixin, Base):
             raise
 
     def test_run(self):
+        if self.__class__ in (BaseCommand,):
+            return
+
         try:
             command = Command(self.mgr, self.taskname, self.config)
             command.run()
             from time import sleep
 
-            sleep(3)
+            sleep(0.5)
             fnp = self.mgr._get_fnp(self.taskname)
             with open(fnp) as fi:
                 data = fi.read()
@@ -245,16 +259,53 @@ class TestCommandPipDepTree(BaseCommand):
 
 
 class TestPip_Init(WriterMixin, Base):
+
+    commandline = "--init"
+
+    def get_options(self):
+        return self.parser.parse_args(self.commandline.split())
+
+    def setUp(self):
+        super(TestPip_Init, self).setUp()
+        self.options = self.get_options()
+        self.mgr = Main(self.options)
+
     def test_001_init(self):
         try:
             print("self.testdir:%s" % (self.testdir))
-            options = self.parser.parse_args(["--init"])
-            mgr = Main(options)
 
-            fnp = os.path.join(mgr.workdir, mgr.FN_CONFIG)
+            fnp = os.path.join(self.mgr.workdir, self.mgr.FN_CONFIG)
             with open(fnp) as fi:
                 config = yload(fi)
             ppp(config)
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+
+class MockMgr(Main):
+    pass
+
+
+class TestParts(TestPip_Init):
+    def setUp(self):
+        super(TestParts, self).setUp()
+        self.workdir = self.seed()
+        self.mgr.__class__ = MockMgr
+
+    def test_import_bucket(self):
+
+        try:
+            for exp, line in [
+                ("tests", "py/tests/test_script01.py:4:import pyquery #dev-bound")
+            ]:
+
+                filebucket, packagename = self.mgr.import_classifier.parse(line)
+                got = filebucket.bucket.name
+                msg = "\nexp:%s<>%s:got for:\n  %s" % (exp, got, line)
+                self.assertEqual(exp, got, msg)
 
         except (Exception,) as e:
             if cpdb():
@@ -312,15 +363,16 @@ class BasePip_Scan(WriterMixin, Base):
 
     def test_0031_import_tracker(self):
         try:
+            if not self.exp_tests_requirements:
+                return
+
             if not self.has_run():
                 self.test_001_scan()
 
             exp = "tests"
 
             for req in self.exp_tests_requirements:
-
                 got = self.mgr.import_classifier.packagetracker.di_packagename[req]
-
                 self.assertEqual(exp, got, "%s:exp:%s<>%s:got" % (req, exp, got))
         except (Exception,) as e:
             if cpdb():
@@ -329,6 +381,10 @@ class BasePip_Scan(WriterMixin, Base):
 
     def test_0032_test_bucket(self):
         try:
+
+            if not self.exp_tests_requirements:
+                return
+
             if not self.has_run():
                 self.test_001_scan()
 
@@ -352,11 +408,15 @@ class BasePip_Scan(WriterMixin, Base):
 
 class TestPip_Scan(BasePip_Scan):
 
-    dn_seed = "tst.seedworkdir01/py"
+    dn_seed = DN_SEED01
 
     # celery is a from-only, django is an import-only
     exp_imports = ["jinja2", "django", "celery"]
     exp_tests_requirements = ["pyquery"]
+
+
+class TestPart(Base):
+    pass
 
 
 class TestMatchingBase(unittest.TestCase):

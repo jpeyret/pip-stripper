@@ -105,9 +105,11 @@ ClassifierImport:
     dev: []
 
     tests:
-      - "^tests/"
-    prod:
-      - "."
+      - "/tests/"
+    prod: []
+      # - "."
+
+  default_bucket: "prod"
 
   requirements_mapping:
     #each requirements file gets filled from 1 or more buckets
