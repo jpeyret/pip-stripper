@@ -58,11 +58,7 @@ class Command(object):
 
                 with open(fnp_o, self.mode) as fo:
                     proc = subprocess.check_call(
-                        cmd.split(),
-                        stdout=fo,
-                        stderr=ferr,
-                        cwd=self.mgr.workdir,
-                        encoding="utf-8",
+                        cmd.split(), stdout=fo, stderr=ferr, cwd=self.mgr.workdir
                     )
                 ferr.write("stderr end\n\n")
 
