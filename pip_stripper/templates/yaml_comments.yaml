@@ -1,0 +1,7 @@
+imports: classification of module imports, depending on directory where code resides
+buckets: drives assignment of packages to requirements
+workstation: workstation-only, won't go into requirements
+prod: will go to requirements.prod.txt
+dev:  will go to requirements.dev.txt
+tests:  will go to requirements.dev.txt
+unknown: no match found so won't go into requirements

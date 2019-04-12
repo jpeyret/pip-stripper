@@ -9,6 +9,8 @@ import os
 from traceback import print_exc as xp
 import pdb
 
+from pip_stripper.yaml_commenter import Commenter
+
 from pip_stripper._baseutils import (
     set_cpdb,
     set_rpdb,
@@ -46,6 +48,10 @@ class ScanWriter(object):
         self.mgr = mgr
         self.fnp_yaml = mgr._get_fnp("scan")
 
+        self.fnp_yaml_comments = os.path.join(
+            self.mgr._get_fnp("templatedir"), "yaml_comments.yaml"
+        )
+
     def write(self):
         try:
             if rpdb():
@@ -53,14 +59,22 @@ class ScanWriter(object):
 
             pips_buckets = self.mgr.pip_classifier.di_bucket.copy()
 
-            for k, v in pips_buckets.items():
+            li_items = list(pips_buckets.items())
+
+            for k, v in li_items:
                 pips_buckets[k] = sorted(v)
+
+                comment_key = k[:-1] + "_"
+                comment_lookup = "comment_lookup_%s" % (k)
+
+                pips_buckets[comment_key] = comment_lookup
 
             pips = dict(buckets=pips_buckets, freeze=self.mgr.all_freezes)
 
             warnings = self.mgr.pip_classifier.warnings
 
             di = self.di = dict(
+                import_="comment_lookup_imports",
                 imports=self.mgr.import_classifier.packagetracker.classify(),
                 pips=pips,
                 aliases=self.mgr.aliases,
@@ -75,8 +89,13 @@ class ScanWriter(object):
                 )
                 di["zzz_debug"] = di_debug
 
-            with open(self.fnp_yaml, "w", encoding="utf-8") as fo:
+            fnp_tmp = self.fnp_yaml + ".tmp"
+            with open(fnp_tmp, "w", encoding="utf-8") as fo:
                 dump(self.di, fo, default_flow_style=False)
+
+            commenter = Commenter(self.fnp_yaml_comments)
+
+            commenter.comment(fnp_tmp, self.fnp_yaml)
 
             # raise NotImplementedError("write(%s)" % (locals()))
         except (Exception,) as e:

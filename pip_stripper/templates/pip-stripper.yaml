@@ -22,13 +22,14 @@ vars:
     liststdlib: "tmp.pip-stripper.liststdlib.rpt"
     scan: "pip-stripper.scan.yaml"
     log: "pip-stripper.log"
+    templatedir: "templates"
 
 
 
 
 
 Scanner:
-  
+
   tasknames: 
     - grep_1
     - grep_2

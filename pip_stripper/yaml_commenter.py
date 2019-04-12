@@ -38,7 +38,7 @@ class Commenter(object):
                         indent = " " * (len(line) - len(line.lstrip()))
                         key = hit.groups()[0]
                         comment = self.lookup(key)
-                        fo.write("%s#%s\n" % (indent, comment))
+                        fo.write("\n%s#%s\n" % (indent, comment))
                     else:
                         fo.write(line)
         except (Exception,) as e:
