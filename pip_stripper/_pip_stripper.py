@@ -231,7 +231,7 @@ class Main(object):
                         logger.warning("could not parse packagename on %s" % (line))
                         continue
                     self._all_pips.add(packagename)
-                    self._all_freezes[packagename] = line
+                    self._all_freezes[packagename] = line.strip()
 
         return self._all_pips
 

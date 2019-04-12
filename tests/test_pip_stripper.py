@@ -405,6 +405,22 @@ class BasePip_Scan(WriterMixin, Base):
                 pdb.set_trace()
             raise
 
+    def test_005_build(self):
+        try:
+            if not self.has_run():
+                self.test_001_scan()
+
+            options = self.parser.parse_args(["--build", "--workdir", self.workdir])
+            self.build_mgr = Main(options)
+            if rpdb():
+                pdb.set_trace()
+            self.build_mgr.process()
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
 
 class TestPip_Scan(BasePip_Scan):
 

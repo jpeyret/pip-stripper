@@ -17,22 +17,35 @@ class Builder(object):
     def __init__(self, mgr):
         self.mgr = mgr
         self.fnp_input_classifier = self.mgr._get_fnp("scan")
-
-        self.fnp_input_freeze = self.mgr._get_fnp("freeze")
-
         self.config = self.mgr.config.get(self.__class__.__name__)
 
     def process(self):
         try:
 
+            with open(self.fnp_input_classifier) as fi:
+                di_classifier = yload(fi)
+
+            di_bucket = di_classifier["pips"]["buckets"]
+
+            di_freeze = di_classifier["pips"]["freeze"]
+
             t_fn = self.config["t_filename_out"]
-            for req, di in self.config("req_mapper").items():
+            for req, di in self.config["req_mapper"].items():
                 fn_o = sub_template(t_fn, dict(req=req))
                 fnp_o = os.path.join(self.mgr.workdir, fn_o)
 
-                for bucketname in di["buckets"]:
+                requirements = []
 
-                    pass
+                for bucketname in di["buckets"]:
+                    for pipname in di_bucket[bucketname]:
+                        freeze_line = di_freeze[pipname]
+                        requirements.append(freeze_line)
+
+                requirements.sort()
+
+                with open(fnp_o, "w") as fo:
+                    for line in requirements:
+                        fo.write("%s\n" % (line))
 
         except (Exception,) as e:
             if cpdb():
