@@ -195,9 +195,6 @@ class WriterMixin(object):
 
             if not os.path.exists(dn_tgt):
                 shutil.copytree(dn_src, dn_tgt)
-            # mask = os.path.join(self.testdir, "*")
-
-            # print(glob(mask))
             return dn_tgt
 
         except (Exception,) as e:
@@ -264,11 +261,9 @@ class BaseCommand(WriterMixin, Base):
 
 
 class TestCommandFreeze(BaseCommand):
+    """ this is mocked rather than hitting your real pip """
+
     taskname = "freeze"
-
-
-# class TestCommandPipDepTree(BaseCommand):
-#     taskname = "pipdeptree"
 
 
 class TestPip_Init(WriterMixin, Base):

@@ -45,6 +45,12 @@ if __name__ == "__main__":
     set_cpdb(cpdb, remove=True)
 
 
+dn_script = os.path.dirname(__file__)
+if not dn_script:
+    fnp_script = os.path.join(dn_cwd_start, sys.argv[0])
+    dn_script = os.path.dirname(fnp_script)
+
+
 class Main(object):
     """ manages batch"""
 
@@ -55,7 +61,11 @@ class Main(object):
 
     def _get_fnp(self, subject):
         try:
-            fn = self.config["vars"]["filenames"][subject]
+            templatedir: "templates"
+            if subject == "templatedir":
+                return os.path.join(dn_script, "templates")
+            else:
+                fn = self.config["vars"]["filenames"][subject]
             return os.path.join(self.workdir, fn)
         except (Exception,) as e:
             if cpdb():

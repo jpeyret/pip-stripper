@@ -18,11 +18,11 @@ vars:
   filenames:
     imports: "tmp.pip-stripper.imports.rpt"
     freeze: "tmp.pip-stripper.freeze.rpt"
-    # pipdeptree: "tmp.pip-stripper.pipdeptree.rpt"
     liststdlib: "tmp.pip-stripper.liststdlib.rpt"
     scan: "pip-stripper.scan.yaml"
     log: "pip-stripper.log"
-    templatedir: "templates"
+    tmp: "tmp.pip-stripper.tmp"
+    
 
 
 
@@ -34,7 +34,6 @@ Scanner:
     - grep_1
     - grep_2
     - freeze
-    # - pipdeptree
 
 
 Command:
@@ -48,12 +47,14 @@ Command:
   #   to keep subprocess happy, don't use as in '^\\s*import\\s'
   ######################
 
-  ########################################
-  # for future portability, commands should probably be keyed by OS
-  ########################################
 
 
   tasks:
+
+    ########################################
+    # for future portability, commands should probably be keyed by OS
+    ########################################
+
     grep_1:
       cmdline: "egrep ^\\s*from\\s.+\\simport\\s --include=*.py --exclude=*/migrations/* --exclude-dir=node_modules -r -n $scandir" 
       filename: "$filenames_imports"
@@ -66,11 +67,6 @@ Command:
     freeze:
       cmdline: "pip freeze"
       filename: "$filenames_freeze"
-
-    pipdeptree:
-      cmdline: "pipdeptree"
-      filename: "$filenames_pipdeptree"
-
 
 
 

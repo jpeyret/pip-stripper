@@ -77,6 +77,7 @@ class ScanWriter(object):
                 import_="comment_lookup_imports",
                 imports=self.mgr.import_classifier.packagetracker.classify(),
                 pips=pips,
+                aliase_="comment_lookup_aliases",
                 aliases=self.mgr.aliases,
                 warnings=warnings,
             )
@@ -89,7 +90,7 @@ class ScanWriter(object):
                 )
                 di["zzz_debug"] = di_debug
 
-            fnp_tmp = self.fnp_yaml + ".tmp"
+            fnp_tmp = self.mgr._get_fnp("tmp")
             with open(fnp_tmp, "w", encoding="utf-8") as fo:
                 dump(self.di, fo, default_flow_style=False)
 
