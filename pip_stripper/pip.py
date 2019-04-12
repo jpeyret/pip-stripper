@@ -14,6 +14,13 @@ from pip_stripper.common import enforce_set_precedence
 
 
 class ClassifierPip(object):
+    """
+    classifies pip packages names into buckets:
+    - by hardcoded configuration in its entry in `pip-stripper.yaml:`, under `buckets`.
+    - by bucket assignment per import directory in `ClassifierImport`
+    
+    """
+
     def __repr__(self):
         return self.__class__.__name__
 
@@ -21,7 +28,6 @@ class ClassifierPip(object):
         try:
             self.mgr = mgr
             self.config = self.mgr.config.get(self.__class__.__name__)
-            self.s_directinstall = set()
 
             self.patre_splitline = re.compile(self.config["pattern_splitline"])
 
@@ -65,30 +71,6 @@ class ClassifierPip(object):
                 pdb.set_trace()
             raise
 
-    # def load(self):
-    #     try:
-    #         fnp = self.mgr._get_fnp("pipdeptree")
-    #         with open(fnp) as fi:
-    #             data = fi.read()
-
-    #         for line in data.split("\n"):
-    #             if line.startswith(" "):
-    #                 continue
-    #             if not line.strip():
-    #                 continue
-
-    #             # really should skip stdlibs here...
-
-    #             packagename, version = self.patre_splitline.split(line)
-
-    #             self.s_directinstall.add(packagename)
-    #         return self.s_directinstall
-
-    #     except (Exception,) as e:
-    #         if cpdb():
-    #             pdb.set_trace()
-    #         raise
-
     def run(self, packagetracker):
 
         try:
@@ -102,10 +84,6 @@ class ClassifierPip(object):
             pip2imp = self.mgr.pip2imp
 
             for pipname in self.mgr.all_pips:
-
-                if pipname == "pyquery":
-                    if rpdb():
-                        pdb.set_trace()
 
                 packagename = pip2imp.get(pipname, pipname)
 
@@ -123,7 +101,6 @@ class ClassifierPip(object):
                 if found:
                     continue
 
-                # if packagetracker.get_package(packagename):
                 bucketname = packagetracker.get_package(packagename)
                 if bucketname:
                     self.di_bucket[bucketname].add(pipname)
@@ -135,11 +112,6 @@ class ClassifierPip(object):
 
                 self.di_bucket["unknown"].add(pipname)
 
-            # self.di_bucket["prod"] = self.di_bucket["prod"] | self.s_prodsettings
-
-            # self.s_unknown = (
-            #     self.s_unknown - self.di_bucket["prod"] - self.di_bucket["dev"]
-            # )
             for import_ in self.s_missing_imports:
                 self.warnings.append("missing import:%s" % (import_))
 

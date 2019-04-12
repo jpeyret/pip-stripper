@@ -254,8 +254,8 @@ class TestCommandFreeze(BaseCommand):
     taskname = "freeze"
 
 
-class TestCommandPipDepTree(BaseCommand):
-    taskname = "pipdeptree"
+# class TestCommandPipDepTree(BaseCommand):
+#     taskname = "pipdeptree"
 
 
 class TestPip_Init(WriterMixin, Base):

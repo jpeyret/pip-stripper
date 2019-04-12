@@ -130,7 +130,6 @@ class Main(object):
 
                 pips = self.pip_classifier = ClassifierPip(self)
 
-                pips.load()
                 for set_ in pips.di_bucket.values():
                     [self.matcher.pip.feed(name) for name in set_]
 
