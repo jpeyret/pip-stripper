@@ -1,4 +1,4 @@
-#TLDR:  `requirements.prod/dev.txt` without *unnecessary* `pip` packages.
+# TLDR:  `requirements.prod/dev.txt` without *unnecessary* `pip` packages.
 
 ~~~
 For the purpose of this exercise, an unnecessary pip package is any package that is not being 
@@ -7,9 +7,9 @@ imported by YOUR own Python code.  Unless you've provided a configuration overri
 
 Let's say that you have installed `black 18.9b0`.  A linter and autoformatter, while very useful in development has no need to be on a server.
 
-##`pip-stripper` will see no `import black` anywhere, so it will not put it in `requirements.prod.txt`
+## `pip-stripper` will see no `import black` anywhere, so it will not put it in `requirements.prod.txt`
 
-#How it works
+# How it works
 
 ````
 usage: _pip_stripper.py [-h] [--config CONFIG] [--scan] [--build] [--init]
@@ -26,13 +26,13 @@ optional arguments:
   --verbose          verbose [False]
 ````
 
-###Initialization
+### Initialization
 
 The first option `--diff` will create **pip-stripper.yaml**, the configuration file for pip-stripper.
 
 **This is the only file you should edit manually!!!**
 
-###Scan
+### Scan
 
 The second option, `--scan`, will scan your Python source files in `--workdir` and use it to create **pip-stripper.scan.yaml**
 
@@ -40,14 +40,14 @@ It will create 2 work files, `tmp.pip-stripper.imports.rpt` and `tmp.pip-strippe
 
 This is the file that contains instructions for the 3rd phase:
 
-###Build.
+### Build.
 
 `--build` will take what it found in **pip-stripper.scan.yaml** and use it to populate 
 `requirements.prod.txt` and `requirements.dev.txt`.
 
 If you don't agree with what's in those requirements files, go back to **pip-stripper.yaml**.
 
-##Configuring `pip-stripper.yaml`
+## Configuring `pip-stripper.yaml`
 
 You may have to enter pip to python import alias names manually (alias matching is something that needs work). 
 
@@ -62,7 +62,7 @@ For example, on a Django site you may to have enter this:
 
 the django-xxx are there because they are mostly found in as module paths in `settings.py`, not `imports`.  And `psycopg2` is the database driver, but that's implicit on a Postgres site.  The `nose` and `pytest` are there because you may use them to test, but never import them either.
 
-####The following associates particular package names with their usage:
+#### The following associates particular package names with their usage:
 
 ````
 ClassifierPip:
@@ -83,7 +83,7 @@ ClassifierPip:
 ````
 
 
-####Associating Python directories with use:
+#### Associating Python directories with use:
 
 This is a typical configuration telling which *buckets* the directories count as:
 
@@ -102,7 +102,7 @@ ClassifierImport:
 
 ````
 
-###Walkthrough:
+### Walkthrough:
 
 Let's take a `pip freeze` line like 
 
@@ -110,7 +110,7 @@ Let's take a `pip freeze` line like
 psycopg2==2.7.7
 ````
 
-####case 1: hardcoding
+#### case 1: hardcoding
 
 First: tries to associate them with an entry in `pip-stripper.yaml`, which
 is basically a hardcoded decision by the user of where to put it.
@@ -130,7 +130,7 @@ ClassifierPip:
 
 This will result in that line going into **requirements.prod.txt**.
 
-####case 2: import classification.
+#### case 2: import classification.
 
 `grep`-ing the Python code found this line:
 
@@ -176,7 +176,7 @@ Builder:
 
 which puts `bucket.tests` in `requirements.dev.txt`.
 
-###case 3 multiple imports
+### case 3 multiple imports
 
 ````
 ./tests/helper_pyquery.py:57:    from pyquery import PyQuery
@@ -198,7 +198,7 @@ ClassifierPip:
 
 Basically, anything found in multiple buckets gets stripped out of lower priority ones.  `prod` beats `tests` so `pyquery` ends up only in `prod` bucket.
 
-###case 4.  no import match was found and nothing was hardcoded.
+### case 4.  no import match was found and nothing was hardcoded.
 
 `Babel==2.6.0`
 
@@ -214,7 +214,7 @@ Babel==2.6.0
 
 
 
-###The result of the `--scan` phase gets put into **pip-stripper.scan.yaml**:
+### The result of the `--scan` phase gets put into **pip-stripper.scan.yaml**:
 
 Notice our friend `black`?  We've explicitly classified it as *workstation*, so the scan didn't label it as *unknown*.
 
@@ -235,7 +235,7 @@ pips:
 
 
 
-###And that's it.  The outcome?
+### And that's it.  The outcome?
 
 my raw pip freeze weighs in at 158 packages:
 
@@ -259,4 +259,4 @@ $ pip freeze | wc -l
 48
 ````
 
-#This is all very nice, but hopefully you have sufficient tests to allow you to be confident you didn't miss anything!
+# This is all very nice, but hopefully you have sufficient tests to allow you to be confident you didn't miss anything!
