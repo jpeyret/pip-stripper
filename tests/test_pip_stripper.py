@@ -9,15 +9,20 @@ import pdb
 import sys
 import shutil
 from glob import glob
+from yaml import safe_load as yload, dump
+
+import tempfile
+
+from unittest.mock import patch
+
+from traceback import print_exc as xp
+
 
 from pip_stripper._pip_stripper import Main, __file__ as _mainfile, Command
 from pip_stripper.matching import Matcher
-from pip_stripper.common import enforce_set_precedence
-from traceback import print_exc as xp
+from pip_stripper.common import enforce_set_precedence, Command
+from pip_stripper.yaml_commenter import Commenter
 
-from yaml import safe_load as yload
-
-import tempfile
 
 undefined = object()
 
@@ -45,8 +50,15 @@ def rpdb(**kwds):
 
 rpdb.enabled = False
 
+dn_cwd_start = os.getcwd()
 
-dn_test = os.path.dirname(__file__)
+
+# howto- figuring out the test script's
+dn_testscripts = os.path.dirname(__file__)
+if not dn_testscripts:
+    fnp_script = os.path.join(dn_cwd_start, sys.argv[0])
+    dn_testscripts = os.path.dirname(fnp_script)
+
 
 from pip_stripper._baseutils import set_cpdb, ppp, debugObject, set_rpdb
 
@@ -55,7 +67,8 @@ FN_SCAN = "pip-stripper.scan.yaml"
 BASEPREFIX = "tmp.pip_stripper"
 
 
-DN_SEED01 = os.path.join("..", "sample", "tst.seedworkdir01/py")
+DN_SAMPLE = os.path.join(dn_testscripts, "..", "sample")
+DN_SEED01 = os.path.join(DN_SAMPLE, "tst.seedworkdir01/py")
 
 
 class Base(unittest.TestCase):
@@ -113,7 +126,7 @@ class Base(unittest.TestCase):
 class Test_Bad_options(Base):
     """Tests for `pip_stripper` package."""
 
-    testdir = dn_test
+    testdir = dn_testscripts
 
     def test_000_badarg(self):
 
@@ -129,7 +142,7 @@ class Test_Bad_options(Base):
                 pdb.set_trace()
             raise
 
-    @unittest.skipUnless(1 or False, "Need to fix")
+    # @unittest.skipUnless(1 or False, "Need to fix")
     def test_001_noconfig(self):
         try:
             options = self.parser.parse_args([])
@@ -148,7 +161,7 @@ class Test_Bad_options(Base):
             options = self.parser.parse_args(["--config", "notexist.yaml"])
             mgr = Main(options)
             self.fail("expected IOError")
-        except (IOError,) as e:
+        except (IOError, FileNotFoundError) as e:
             pass
         except (Exception,) as e:
             if cpdb():
@@ -177,7 +190,7 @@ class WriterMixin(object):
     def seed(self):
         try:
 
-            dn_src = os.path.join(dn_test, self.dn_seed)
+            dn_src = os.path.join(dn_testscripts, self.dn_seed)
             dn_tgt = os.path.join(self.testdir, "py")
 
             if not os.path.exists(dn_tgt):
@@ -316,6 +329,16 @@ class TestParts(TestPip_Init):
 class BasePip_Scan(WriterMixin, Base):
     pass
 
+    fake_subprocess_payload = dict(
+        freeze="""PyQt5==5.12
+PyQt5-sip==4.19.14
+pyquery==1.4.0
+pytest==4.4.0
+python-dateutil==2.8.0
+python-editor==1.0.4
+"""
+    )
+
     # this is used to run scan only once
     fn_marker = FN_SCAN
 
@@ -326,13 +349,29 @@ class BasePip_Scan(WriterMixin, Base):
     def get_options(self):
         return self.parser.parse_args(["--init", "--workdir", self.workdir])
 
+    def fake_subprocess(self, cmd, fnp_o, self_):
+        try:
+            if self_.taskname != "freeze":
+                return self_._subprocess_actual(cmd, fnp_o, self_)
+
+            with open(fnp_o, self_.mode) as fo:
+                fo.write(self.fake_subprocess_payload["freeze"])
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
     def test_001_scan(self):
         try:
-            options = self.get_options()
-            self.mgr = Main(options)
-            if rpdb():
-                pdb.set_trace()
-            self.mgr.process()
+
+            with patch.object(
+                Command, "_subprocess", side_effect=self.fake_subprocess
+            ) as mock_method:
+
+                options = self.get_options()
+                self.mgr = Main(options)
+                self.mgr.process()
 
         except (Exception,) as e:
             if cpdb():
@@ -499,6 +538,40 @@ class TestSetPrecedence(Base):
             enforce_set_precedence(prod, tests, dev)
 
             got = dict(prod=prod, tests=tests, dev=dev)
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+
+class TestCommenter(WriterMixin, Base):
+
+    fnp_lookup = os.path.join(DN_SAMPLE, "yaml_comments.yaml")
+
+    def test_001_basic(self, *args, **kwargs):
+        try:
+
+            di = dict(
+                taskname_="comment_lookup_scanner_tasknames",
+                tasknames=["taskA", "taskB"],
+                buckets=dict(
+                    test0="comment_lookup_bucketnames", test1="test1", test2="test2"
+                ),
+            )
+            fnp_tmp = os.path.join(self.testdir, "tmp.yaml")
+            print("fnp_tmp:%s" % (fnp_tmp))
+            with open(fnp_tmp, "w") as fo:
+                dump(di, fo, default_flow_style=False)
+
+            fnp_o = os.path.join(self.testdir, self.get_label())
+
+            commenter = Commenter(self.fnp_lookup)
+
+            commenter.comment(fnp_tmp, fnp_o)
+
+            with open(fnp_o) as fi:
+                print(fi.read())
 
         except (Exception,) as e:
             if cpdb():

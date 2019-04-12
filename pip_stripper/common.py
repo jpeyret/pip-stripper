@@ -43,8 +43,35 @@ class Command(object):
         self.append = self.config.get("append", False)
         self.stderr = ""
 
-    def write(self, msg):
-        self.stderr += "%s\n"
+        self.mode = "a" if self.append else "w"
+
+    def __repr__(self):
+        return self.taskname
+
+    def _subprocess(self, cmd, fnp_o, self_=None):
+        try:
+
+            fnp_stderr = self.mgr._get_fnp("log")
+            with open(fnp_stderr, "a") as ferr:
+
+                ferr.write("cmd: %s\nstderr begin:\n" % (cmd))
+
+                with open(fnp_o, self.mode) as fo:
+                    proc = subprocess.check_call(
+                        cmd.split(),
+                        stdout=fo,
+                        stderr=ferr,
+                        cwd=self.mgr.workdir,
+                        encoding="utf-8",
+                    )
+                ferr.write("stderr end\n\n")
+
+        except (Exception,) as e:
+            if cpdb():
+                pdb.set_trace()
+            raise
+
+    _subprocess_actual = _subprocess
 
     def run(self):
         try:
@@ -56,25 +83,7 @@ class Command(object):
             cmd = sub_template(t_cmd, self, self.mgr.vars)
 
             fnp_o = sub_template(t_fnp, self, self.mgr.vars)
-
-            li_cmdline = cmd.split()
-
-            mode = "a" if self.append else "w"
-
-            fnp_stderr = self.mgr._get_fnp("log")
-            with open(fnp_stderr, "a") as ferr:
-
-                ferr.write("cmd: %s\nstderr begin:\n" % (cmd))
-
-                with open(fnp_o, mode) as fo:
-                    proc = subprocess.check_call(
-                        cmd.split(),
-                        stdout=fo,
-                        stderr=ferr,
-                        cwd=self.mgr.workdir,
-                        encoding="utf-8",
-                    )
-                ferr.write("stderr end\n\n")
+            self._subprocess(cmd=cmd, fnp_o=fnp_o, self_=self)
 
         except (Exception,) as e:
             if cpdb():
