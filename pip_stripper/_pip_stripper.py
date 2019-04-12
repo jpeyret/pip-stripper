@@ -61,7 +61,6 @@ class Main(object):
 
     def _get_fnp(self, subject):
         try:
-            templatedir: "templates"
             if subject == "templatedir":
                 return os.path.join(dn_script, "templates")
             else:
