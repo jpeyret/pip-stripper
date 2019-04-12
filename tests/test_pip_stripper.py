@@ -75,7 +75,7 @@ class Base(unittest.TestCase):
                 if not os.path.exists(testdir_base):
                     os.makedirs(testdir_base)
             else:
-                Base.testdir_base = tempfile.mkdtemp(prefix=prefix)
+                Base.testdir_base = tempfile.mkdtemp(prefix="pip_stripper")
         except (Exception,) as e:
             if cpdb():
                 pdb.set_trace()
