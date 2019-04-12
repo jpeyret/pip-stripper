@@ -46,6 +46,11 @@ Command:
   #   to keep subprocess happy, don't use as in '^\\s*import\\s'
   ######################
 
+  ########################################
+  # for future portability, commands should probably be keyed by OS
+  ########################################
+
+
   tasks:
     grep_1:
       cmdline: "egrep ^\\s*from\\s.+\\simport\\s --include=*.py --exclude=*/migrations/* --exclude-dir=node_modules -r -n $scandir" 
