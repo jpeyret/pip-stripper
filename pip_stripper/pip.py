@@ -65,29 +65,29 @@ class ClassifierPip(object):
                 pdb.set_trace()
             raise
 
-    def load(self):
-        try:
-            fnp = self.mgr._get_fnp("pipdeptree")
-            with open(fnp) as fi:
-                data = fi.read()
+    # def load(self):
+    #     try:
+    #         fnp = self.mgr._get_fnp("pipdeptree")
+    #         with open(fnp) as fi:
+    #             data = fi.read()
 
-            for line in data.split("\n"):
-                if line.startswith(" "):
-                    continue
-                if not line.strip():
-                    continue
+    #         for line in data.split("\n"):
+    #             if line.startswith(" "):
+    #                 continue
+    #             if not line.strip():
+    #                 continue
 
-                # really should skip stdlibs here...
+    #             # really should skip stdlibs here...
 
-                packagename, version = self.patre_splitline.split(line)
+    #             packagename, version = self.patre_splitline.split(line)
 
-                self.s_directinstall.add(packagename)
-            return self.s_directinstall
+    #             self.s_directinstall.add(packagename)
+    #         return self.s_directinstall
 
-        except (Exception,) as e:
-            if cpdb():
-                pdb.set_trace()
-            raise
+    #     except (Exception,) as e:
+    #         if cpdb():
+    #             pdb.set_trace()
+    #         raise
 
     def run(self, packagetracker):
 

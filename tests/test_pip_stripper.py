@@ -55,7 +55,7 @@ FN_SCAN = "pip-stripper.scan.yaml"
 BASEPREFIX = "tmp.pip_stripper"
 
 
-DN_SEED01 = "tst.seedworkdir01/py"
+DN_SEED01 = os.path.join("..", "sample", "tst.seedworkdir01/py")
 
 
 class Base(unittest.TestCase):

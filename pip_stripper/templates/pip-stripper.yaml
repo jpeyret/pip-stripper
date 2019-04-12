@@ -18,7 +18,7 @@ vars:
   filenames:
     imports: "tmp.pip-stripper.imports.rpt"
     freeze: "tmp.pip-stripper.freeze.rpt"
-    pipdeptree: "tmp.pip-stripper.pipdeptree.rpt"
+    # pipdeptree: "tmp.pip-stripper.pipdeptree.rpt"
     liststdlib: "tmp.pip-stripper.liststdlib.rpt"
     scan: "pip-stripper.scan.yaml"
     log: "pip-stripper.log"
@@ -32,7 +32,7 @@ Scanner:
     - grep_1
     - grep_2
     - freeze
-    - pipdeptree
+    # - pipdeptree
 
 
 Command:
