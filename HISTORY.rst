@@ -21,3 +21,8 @@ History
 ------------------
 
 * various doc and badges adjustments
+
+0.1.6 (2019-04-15)
+------------------
+
+* fixed packaging errors for README and version
