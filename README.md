@@ -47,11 +47,15 @@ The first option `--init` will create **pip-stripper.yaml**, the configuration f
 
 The second option, `--scan`, will scan your Python source files in `--workdir` and use it to create **pip-stripper.scan.yaml**.  
 
-This is the file that contains instructions for the build phase, don't edit:
- - adjust the configuration
+This is the file that contains instructions for the build phase.  
+
+**Don't edit pip-stripper.scan.yaml!**  
+
+Instead:
+ - adjust the configuration in **pip-stripper.yaml**
  - re-run the scan
 
-It will create 2 work files, `tmp.pip-stripper.imports.rpt` and `tmp.pip-stripper.freeze.rpt` to track pip packages and its best guesses at python imports, respectively.
+`--scan` also creates 2 work files, `tmp.pip-stripper.freeze.rpt` and  `tmp.pip-stripper.imports.rpt`, tracking pip packages and its best guesses at python imports, respectively.
 
 
 ### Build.
@@ -143,7 +147,7 @@ ClassifierPip:
       - psycopg2
 ````
 
-This will result in `psycopg2` going into **requirements.prod.txt**.
+This will result in `psycopg2==2.7.7` going into **requirements.prod.txt** (when needed, requirements lines are always copied from the `pip freeze` output).
 
 #### case 2: import classification.
 
