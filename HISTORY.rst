@@ -11,3 +11,8 @@ History
 ------------------
 
 * corrected home page
+
+0.1.2 (2019-04-14)
+------------------
+
+* various doc and badges adjustments
