@@ -13,7 +13,8 @@ install:
 
   - pip install pytest
   - pip install pytest-cov
-  - pip install coveralls  
+  - pip install coveralls 
+  - pip install PyYAML 
 
 # Command to run tests, e.g. python setup.py test
 # script: nosetests
