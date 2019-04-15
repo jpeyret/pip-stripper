@@ -14,6 +14,9 @@ install:
 # Command to run tests, e.g. python setup.py test
 script: nosetests
 
+after_success:
+  - coveralls
+
 branches:
   only:
     - master
@@ -33,3 +36,4 @@ deploy:
     tags: true
     repo: jpeyret/pip_stripper
     python: 3.6
+
