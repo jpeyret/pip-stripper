@@ -59,7 +59,7 @@ It will create 2 work files, `tmp.pip-stripper.imports.rpt` and `tmp.pip-strippe
 `--build` will take what it found in **pip-stripper.scan.yaml** and use it to populate 
 `requirements.prod.txt` and `requirements.dev.txt`.
 
-If what's in the requirements files doesn't fit your needs, you need to edit **pip-stripper.yaml**.
+If you don't agree with what's in those requirements files, you may need to edit **pip-stripper.yaml**.
 
 ## Editing `pip-stripper.yaml`
 
@@ -231,6 +231,13 @@ pips:
     - Babel
     workstation:
     - black        
+````
+
+Look at the end for the `warnings:` section.  In this case, `repr` was used with Python 2.7 but isn't necessary with Python 3, so I won't worry about it.  A typical reason for a missing import is that automatic aliasing to link the pip name and import name didn't work. 
+
+````
+warnings:
+- missing import:repr
 ````
 
 
