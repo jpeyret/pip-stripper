@@ -274,4 +274,15 @@ $ pip freeze | wc -l
 
 The way you can test is to create a new virtualenv, pip install both requirements files and then run your tests.
 
-### WARNING:  be cautious in putting things in dev/tests buckets rather than prod.  Your tests may all run to success, but production will still fail.
+### WARNING:  be cautious in hardcoding package associations in dev/tests buckets rather than prod.  Your tests could run to success, but production would still fail.
+
+These are pretty conservative as nose and pytest are really only testing tools.
+
+````
+ClassifierPip:
+  buckets:
+    tests:
+      - nose
+      - nose2
+      - pytest
+````
