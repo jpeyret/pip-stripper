@@ -19,7 +19,7 @@ install:
 # script: nosetests
 
 script:
-  - pytest --cov=pip_stripper/
+  - pytest --cov=pip_stripper/ --ignore=sample/
 
 after_success:
   - coveralls
