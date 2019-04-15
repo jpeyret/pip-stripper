@@ -3,5 +3,5 @@
 """Top-level package for pip-stripper."""
 
 __author__ = """JL Peyret"""
-__email__ = 'jpeyret@gmail.com'
-__version__ = '0.1.0'
+__email__ = "jpeyret@gmail.com"
+__version__ = "0.1.1"

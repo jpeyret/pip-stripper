@@ -1,13 +1,20 @@
-# TLDR:  `requirements.prod/dev.txt` without *unnecessary* `pip` packages.
+![https://pypi.python.org/pypi/pip-stripper](https://img.shields.io/pypi/v/pip-stripper.svg)  ![https://travis-ci.org/jpeyret/pip-stripper](https://img.shields.io/travis/jpeyret/pip-stripper.svg)
+
+# TLDR:  requirements without *unnecessary* `pip` packages.
+
+
 
 ~~~
 For the purpose of this exercise, an unnecessary pip package is any package that is not being 
-imported by YOUR own Python code.  Unless you've provided a configuration override stating that you want it.
+imported by YOUR own Python code.  
+Unless you've provided a configuration override stating that you want it.
 ~~~
 
-Let's say that you have installed `black 18.9b0`.  A linter and autoformatter, while very useful in development has no need to be on a server.
+For example, let's say that you have installed `black 18.9b0`.  A linter and autoformatter, while very useful in development has no need to be on a server:
 
-## `pip-stripper` will see no `import black` anywhere, so it will not put it in `requirements.prod.txt`
+`pip-stripper` will see no `import black` anywhere, so it will not put it in `requirements.prod.txt`
+
+
 
 # How it works
 
@@ -26,11 +33,15 @@ optional arguments:
   --verbose          verbose [False]
 ````
 
+## Three phases, `initialization`, `scan` and `build`.
+
+
 ### Initialization
 
-The first option `--diff` will create **pip-stripper.yaml**, the configuration file for pip-stripper.
+The first option `--init` will create **pip-stripper.yaml**, the configuration file for pip-stripper.
 
 **This is the only file you should edit manually!!!**
+
 
 ### Scan
 
@@ -38,16 +49,25 @@ The second option, `--scan`, will scan your Python source files in `--workdir` a
 
 It will create 2 work files, `tmp.pip-stripper.imports.rpt` and `tmp.pip-stripper.freeze.rpt` to track pip packages and its best guesses at python imports, respectively.
 
-This is the file that contains instructions for the 3rd phase:
+This is the file that contains instructions for the 3rd phase.  Don't edit it, go 
 
 ### Build.
 
 `--build` will take what it found in **pip-stripper.scan.yaml** and use it to populate 
 `requirements.prod.txt` and `requirements.dev.txt`.
 
-If you don't agree with what's in those requirements files, go back to **pip-stripper.yaml**.
+If you don't agree with what's in those requirements files, you may need to edit **pip-stripper.yaml**.
 
-## Configuring `pip-stripper.yaml`
+## Editing `pip-stripper.yaml`
+
+editing **pip-stripper.yaml** allows you to specify:
+
+- `pip` vs `import` alias
+- specify which packages are just *workstation*-level and shouldn't go into requirements.
+- hardcode packages that need to go into either.
+- Associating your source directories to either `prod` or `dev`.
+
+### Aliases
 
 You may have to enter pip to python import alias names manually (alias matching is something that needs work). 
 
@@ -62,7 +82,7 @@ For example, on a Django site you may to have enter this:
 
 the django-xxx are there because they are mostly found in as module paths in `settings.py`, not `imports`.  And `psycopg2` is the database driver, but that's implicit on a Postgres site.  The `nose` and `pytest` are there because you may use them to test, but never import them either.
 
-#### The following associates particular package names with their usage:
+### Hardcoding package to requirement mapping:
 
 ````
 ClassifierPip:
@@ -83,7 +103,7 @@ ClassifierPip:
 ````
 
 
-#### Associating Python directories with use:
+#### Associating Python directories to requirements:
 
 This is a typical configuration telling which *buckets* the directories count as:
 
