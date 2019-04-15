@@ -5,6 +5,9 @@ include LICENSE
 include README.md
 
 recursive-include tests *
+recursive-include templates *
+recursive-include sample *
+
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 

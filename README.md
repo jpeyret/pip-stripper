@@ -12,7 +12,7 @@ Unless you've provided a configuration override stating that you want it.
 
 For example, let's say that you have installed `black 18.9b0`.  A linter and autoformatter, while very useful in development has no need to be on a server:
 
-`pip-stripper` will see no `import black` anywhere, so it will not put it in `requirements.prod.txt`
+`pip-stripper` won't find `import black` anywhere, so it will not put it in `requirements`
 
 
 
@@ -45,24 +45,27 @@ The first option `--init` will create **pip-stripper.yaml**, the configuration f
 
 ### Scan
 
-The second option, `--scan`, will scan your Python source files in `--workdir` and use it to create **pip-stripper.scan.yaml**
+The second option, `--scan`, will scan your Python source files in `--workdir` and use it to create **pip-stripper.scan.yaml**.  
+
+This is the file that contains instructions for the build phase, don't edit:
+ - adjust the configuration
+ - re-run the scan
 
 It will create 2 work files, `tmp.pip-stripper.imports.rpt` and `tmp.pip-stripper.freeze.rpt` to track pip packages and its best guesses at python imports, respectively.
 
-This is the file that contains instructions for the 3rd phase.  Don't edit it, go 
 
 ### Build.
 
 `--build` will take what it found in **pip-stripper.scan.yaml** and use it to populate 
 `requirements.prod.txt` and `requirements.dev.txt`.
 
-If you don't agree with what's in those requirements files, you may need to edit **pip-stripper.yaml**.
+If what's in the requirements files doesn't fit your needs, you need to edit **pip-stripper.yaml**.
 
 ## Editing `pip-stripper.yaml`
 
-editing **pip-stripper.yaml** allows you to specify:
+This allows you to specify:
 
-- `pip` vs `import` alias
+- `pip` vs `import` aliases
 - specify which packages are just *workstation*-level and shouldn't go into requirements.
 - hardcode packages that need to go into either.
 - Associating your source directories to either `prod` or `dev`.
@@ -122,14 +125,14 @@ ClassifierImport:
 
 #### case 1: hardcoding
 
-Let's take a `pip freeze` line like 
+Given a `pip freeze` line like 
 
 ````
 psycopg2==2.7.7
 ````
 
 
-First, associates package names with an `ClassifierPip` entry in **pip-stripper.yaml**, (basically a hardcoded decision by the user of where to put it).
+First, it looks for a matching entry in `ClassifierPip:buckets` in **pip-stripper.yaml**, (basically a hardcoded decision by the user of where to put it).
         
 ````
 ClassifierPip:
@@ -150,9 +153,7 @@ This will result in `psycopg2` going into **requirements.prod.txt**.
 ./tests/helper_pyquery.py:57:    from pyquery import PyQuery
 ````
 
-**pip-stripper.scan.yaml**:
-
-As you've configured it, `--scan`'s  *import classification* puts it in the `tests` bucket.
+Each file path is run against the regex specified by `ClassifierImport:regex_dirs`, so pyquery ends up in the `tests` bucket.
 
 ````
 ClassifierImport:
@@ -186,7 +187,7 @@ which puts `pyquery` in `requirements.dev.txt`.
 ./myserver/foobar.py:22:    from pyquery import PyQuery
 ````
 
-So, now `pyquery` is in both `tests` and `prod` buckets, as `myserver` did not match any regex_dirs entries, so ended in `default_bucket: "prod"`.
+As before, `pyquery` is put in `tests` and `prod` buckets. But also in `prod` as  `myserver` did not match any `ClassifierImport:regex_dirs`, meaning that `default_bucket: "prod"` was used.
 
 enter *bucket precedence*
 
@@ -199,15 +200,13 @@ ClassifierPip:
     - workstation
 ````
 
-Basically, anything found in multiple buckets gets stripped out of lower priority ones.  `prod` beats `tests` so `pyquery` ends up only in `prod` bucket.
+`prod` beats `tests` so `pyquery` ends up only in `prod` bucket.
 
 ### case 4.  no import match was found and nothing was hardcoded.
 
 `Babel==2.6.0`
 
-will get left out of requirements.  Which is not to say that it won't end up `pip installed` on your server if it is a dependency of some other package.  
-
-[`pipdeptree`](https://pypi.org/project/pipdeptree/) tells me that `Babel`is a top-level direct install.
+will get left out of requirements.  Which is not to say that it won't end up `pip installed` on your server if it is a dependency of some other package ([`pipdeptree`](https://pypi.org/project/pipdeptree/) can help you there).
 
 ````
 Babel==2.6.0
@@ -215,9 +214,7 @@ Babel==2.6.0
 
 ````
 
-
-
-### The result of the `--scan` phase gets put into **pip-stripper.scan.yaml**:
+##Build Phase - the result of the `--scan` phase gets put into **pip-stripper.scan.yaml**:
 
 Notice our friend `black`?  We've explicitly classified it as *workstation*, so the scan didn't label it as *unknown*.
 
@@ -255,7 +252,7 @@ $ wc -l requirements*txt | egrep 'prod|dev'
 18 requirements.prod.txt
 ````
 
-On my test environment, `pip install -r requirements.prod.txt -r requirements.dev.txt` got me 48 packages.
+On my test environment, `pip install -r requirements.prod.txt -r requirements.dev.txt` got me 48 packages, after dependencies were pulled in.
 
 ````
 $ pip freeze | wc -l
@@ -263,3 +260,7 @@ $ pip freeze | wc -l
 ````
 
 # This is all very nice, but hopefully you have sufficient tests to allow you to be confident you didn't miss anything!
+
+The way you can test is to create a new virtualenv, pip install both requirements files and then run your tests.
+
+### WARNING:  be cautious in putting things in dev/tests buckets rather than prod.  Your tests may all run to success, but production will still fail.
