@@ -5,13 +5,20 @@
 
 from setuptools import setup, find_packages
 
-with open("README.md") as readme_file:
-    readme = readme_file.read()
+# with open("README.md") as readme_file:
+#     readme = readme_file.read()
+
+
+from os import path
+
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = []
+requirements = ["PyYAML"]
 
 setup_requirements = []
 
@@ -31,10 +38,12 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
-    description="strip out unnecessary packages from requirementts",
+    description="strip out unnecessary pip packages from requirements",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     install_requires=requirements,
     license="MIT license",
-    long_description=readme + "\n\n" + history,
+    # long_description=readme + "\n\n" + history,
     include_package_data=True,
     keywords="pip_stripper",
     name="pip_stripper",
@@ -43,6 +52,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/jpeyret/pip-stripper",
-    version="version='0.1.5'",
+    version="0.1.5",
     zip_safe=False,
 )
