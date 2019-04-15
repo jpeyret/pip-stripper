@@ -11,8 +11,15 @@ python:
 install: 
   # pip install -U tox-travis
 
+  - pip install pytest
+  - pip install pytest-cov
+  - pip install coveralls  
+
 # Command to run tests, e.g. python setup.py test
-script: nosetests
+# script: nosetests
+
+script:
+  - pytest --cov=pip_stripper/
 
 after_success:
   - coveralls
