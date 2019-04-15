@@ -76,13 +76,10 @@ hardcoded_aliases:
   PyYAML: yaml
 ````
 
-Or you may want to assign certain pip packages to `prod` or `dev` by default.
-
-For example, on a Django site you may to have enter this:
-
-the django-xxx are there because they are mostly found in as module paths in `settings.py`, not `imports`.  And `psycopg2` is the database driver, but that's implicit on a Postgres site.  The `nose` and `pytest` are there because you may use them to test, but never import them either.
 
 ### Hardcoding package to requirement mapping:
+
+Because `psycopg2` is typically never really imported in a Django or SQLAlchemy context, but rather derived from the configuration, you need to specify it yourself as below.  Same thing with `django-redis-cache` which is configured in django's `settings.py` as package path rather than an import.  
 
 ````
 ClassifierPip:
@@ -98,16 +95,15 @@ ClassifierPip:
       - pytest
 
     workstation:
-      # that's a workstation only package, isn't even required for testing, so it's held back
+      # that's a workstation only package, so it's held back
       - black
 ````
 
-
 #### Associating Python directories to requirements:
 
-This is a typical configuration telling which *buckets* the directories count as:
+This is a typical regex-based configuration telling which *buckets* the directories count as:
 
-`prod` is the default outcome.  First match wins, and actually `tests` is the only one configured.
+`prod` is the default outcome.  First match wins, and `tests` is the only one needed.
 
 ````
 ClassifierImport:
@@ -124,21 +120,17 @@ ClassifierImport:
 
 ### Walkthrough:
 
+#### case 1: hardcoding
+
 Let's take a `pip freeze` line like 
 
 ````
 psycopg2==2.7.7
 ````
 
-#### case 1: hardcoding
 
-First: tries to associate them with an entry in `pip-stripper.yaml`, which
-is basically a hardcoded decision by the user of where to put it.
+First, associates package names with an `ClassifierPip` entry in **pip-stripper.yaml**, (basically a hardcoded decision by the user of where to put it).
         
-**pip-stripper.yaml**:
-
-(notice that we've classified `black` as *workstation*?)
-
 ````
 ClassifierPip:
   buckets:
@@ -148,7 +140,7 @@ ClassifierPip:
       - psycopg2
 ````
 
-This will result in that line going into **requirements.prod.txt**.
+This will result in `psycopg2` going into **requirements.prod.txt**.
 
 #### case 2: import classification.
 
@@ -158,18 +150,9 @@ This will result in that line going into **requirements.prod.txt**.
 ./tests/helper_pyquery.py:57:    from pyquery import PyQuery
 ````
 
-`--scan` has automatically deduced an alias.  Yessss!
-
 **pip-stripper.scan.yaml**:
 
-````
-aliases:
-	pyquery: pyquery
-````
-
 As you've configured it, `--scan`'s  *import classification* puts it in the `tests` bucket.
-
-**pip-stripper.yaml**:
 
 ````
 ClassifierImport:
@@ -194,7 +177,7 @@ Builder:
         - prod
 ````
 
-which puts `bucket.tests` in `requirements.dev.txt`.
+which puts `pyquery` in `requirements.dev.txt`.
 
 ### case 3 multiple imports
 
