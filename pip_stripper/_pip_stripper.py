@@ -271,7 +271,7 @@ class Main(object):
             "--" + dest,
             default=default,
             action="store_true",
-            help="%s don't run scan to classify packages [%s].  --build then re-uses existing scan"
+            help="%s don't run scan to classify packages [%s]. build re-uses existing pip-stripper.scan.yaml"
             % (dest, default),
         )
 
@@ -281,7 +281,8 @@ class Main(object):
             "--" + dest,
             default=default,
             action="store_true",
-            help="%s [%s]" % (dest, default),
+            help="%s - read pip-stripper.scan.yaml to create requirements.prod/dev.txt [%s]"
+            % (dest, default),
         )
 
         dest = "init"
