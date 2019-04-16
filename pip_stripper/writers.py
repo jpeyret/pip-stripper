@@ -27,20 +27,13 @@ from yaml import safe_load as yload, dump
 
 class ScanWriter(object):
     """
-    imports:
-      dev:
-      prod:
-      tests:
+    
+    
 
-    pips:
-      dev:
-      prod:
-      tests:
-      workstation:
-      unclassified:
+    writes the results of cross-checking configuration file, grep-ed imports and
+    pip freeze to pip-stripper.scan.yaml
 
-    aliases:
-    stdlib:
+    
 
     """
 
@@ -54,8 +47,6 @@ class ScanWriter(object):
 
     def write(self):
         try:
-            if rpdb():
-                pdb.set_trace()
 
             pips_buckets = self.mgr.pip_classifier.di_bucket.copy()
 
@@ -98,7 +89,8 @@ class ScanWriter(object):
 
             commenter.comment(fnp_tmp, self.fnp_yaml)
 
-            # raise NotImplementedError("write(%s)" % (locals()))
+            print("pipstripper scan written to %s" % (self.fnp_yaml))
+
         except (Exception,) as e:
             if cpdb():
                 pdb.set_trace()

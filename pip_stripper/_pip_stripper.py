@@ -95,11 +95,15 @@ class Main(object):
                     except (IOError,) as e:
                         pass
                 else:
-                    raise ValueError("missing configuration file")
+                    msg = "missing configuration file.  perhaps you wanted to use the --init option to create one?"
+                    print(msg)
+                    sys.exit(1)
 
             else:
                 with open(fnp_config) as fi:
                     self.config = yload(fi)
+
+            self.scan = not self.options.noscan
 
             #
             self.vars = dict()
@@ -129,7 +133,7 @@ class Main(object):
 
     def process(self):
         try:
-            if self.options.scan:
+            if self.scan:
                 self.scanner = Scanner(self)
                 self.scanner.run()
                 self.import_classifier.run()
@@ -163,9 +167,9 @@ class Main(object):
 
     @property
     def s_stdlib(self):
+        """load the std lib import names"""
 
         if self._s_stdlib is None:
-
             self._s_stdlib = liststdlib()
             self._s_stdlib |= set(self.config.get("extra_stdlib", []))
 
@@ -175,6 +179,7 @@ class Main(object):
 
     @property
     def imp2pip(self):
+        """uses the aliases to look up import name to pip name """
         if self._imp2pip is None:
 
             self._imp2pip = {v: k for k, v in self.aliases.items()}
@@ -207,6 +212,8 @@ class Main(object):
 
     @property
     def all_imports(self):
+        """loads the grep-ed import scans on demand"""
+
         if self._all_imports is None:
             self._all_imports = set(
                 self.import_classifier.packagetracker.di_packagename
@@ -227,6 +234,8 @@ class Main(object):
 
     @property
     def all_pips(self):
+        """loads the pip freeze output on demand"""
+
         if self._all_pips is None:
             self._all_pips = set()
             self._all_freezes = {}
@@ -256,13 +265,14 @@ class Main(object):
             % (dest, cls.FN_CONFIG),
         )
 
-        dest = "scan"
-        default = True
+        dest = "noscan"
+        default = False
         parser.add_argument(
             "--" + dest,
             default=default,
-            action="store_false",
-            help="%s scan python files and classify packages [%s]" % (dest, default),
+            action="store_true",
+            help="%s don't run scan to classify packages [%s].  --build then re-uses existing scan"
+            % (dest, default),
         )
 
         dest = "build"
@@ -297,10 +307,10 @@ class Main(object):
             help="%s [%s]" % (dest, default),
         )
 
-        # use snippet.optadd to expand choices.
         return parser
 
     def _initialize(self, fnp_config):
+        """--init option handling"""
 
         try:
             fnp_config = os.path.join(self.workdir, self.FN_CONFIG)
@@ -316,6 +326,8 @@ class Main(object):
 
             with open(fnp_config, "w") as fo:
                 fo.write(seed)
+
+            print("pip-stripper configuration generated @ %s" % (fnp_config))
 
         except (Exception,) as e:
             if cpdb():
@@ -364,11 +376,22 @@ class Scanner(object):
             raise
 
 
-if __name__ == "__main__":
+def main(args=None):
+    """the console_scripts entry point"""
 
-    set_cpdb(cpdb, remove=True)
+    if args is None:
+        args = sys.argv[1:]
 
     parser = Main.getOptParser()
-    options = parser.parse_args()
+    options = parser.parse_args(args)
+
     mgr = Main(options)
     mgr.process()
+
+
+if __name__ == "__main__":
+
+    # conditional pdb.trace()-ing with --cpdb on command line
+    set_cpdb(cpdb, remove=True)
+
+    main()

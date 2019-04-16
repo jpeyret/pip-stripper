@@ -149,8 +149,9 @@ class Test_Bad_options(Base):
             mgr = Main(options)
             self.fail("should have complained about missing configuration")
 
-        except (ValueError,) as e:
-            self.assertTrue("configuration file" in str(e))
+        except (SystemExit,) as e:
+            pass
+
         except (Exception,) as e:
             if cpdb():
                 pdb.set_trace()

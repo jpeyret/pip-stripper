@@ -7,15 +7,12 @@ def main(args=None):
     """The main routine."""
 
     if args is None:
-        args = sys.argv[:1]
+        args = sys.argv[1:]
 
     parser = Main.getOptParser()
-    print("args:%s" % (args))
     options = parser.parse_args(args)
-    print("options:%s" % (options))
 
     mgr = Main(options)
-    print("mgr:%s" % (mgr))
     mgr.process()
 
 
