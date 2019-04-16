@@ -271,7 +271,7 @@ class Main(object):
             "--" + dest,
             default=default,
             action="store_true",
-            help="%s don't run scan to classify packages [%s]. build re-uses existing pip-stripper.scan.yaml"
+            help="%s don't scan to classify packages --build will re-use existing pip-stripper.scan.yaml. [%s]. "
             % (dest, default),
         )
 

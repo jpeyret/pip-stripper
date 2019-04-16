@@ -20,15 +20,17 @@ For example, let's say that you have installed `black 18.9b0`.  A linter and aut
 # How it works
 
 ````
-usage: _pip_stripper.py [-h] [--config CONFIG] [--scan] [--build] [--init]
+usage: pipstripper [-h] [--config CONFIG] [--noscan] [--build] [--init]
                         [--workdir WORKDIR] [--verbose]
 
 optional arguments:
   -h, --help         show this help message and exit
   --config CONFIG    config - will look for pip-stripper.yaml in --workdir,
                      current directory
-  --scan             scan scan python files and classify packages [True]
-  --build            build [False]
+  --noscan           noscan don't scan to classify packages --build will re-
+                     use existing pip-stripper.scan.yaml. [False].
+  --build            build - read pip-stripper.scan.yaml to create
+                     requirements.prod/dev.txt [False]
   --init             init initialize the config file if it doesn't exist
   --workdir WORKDIR  workdir [defaults to config's value or current directory]
   --verbose          verbose [False]
@@ -37,14 +39,14 @@ optional arguments:
 ## Three phases, `initialization`, `scan` and `build`.
 
 
-### Initialization
+### Initialization (defaults to False)
 
 The first option `--init` will create **pip-stripper.yaml**, the configuration file for pip-stripper.
 
 **This is the only file you should edit manually!!!**
 
 
-### Scan
+### Scan (defaults to True)
 
 The second option, `--scan`, will scan your Python source files in `--workdir` and use it to create **pip-stripper.scan.yaml**.  
 
@@ -59,12 +61,17 @@ Instead:
 `--scan` also creates 2 work files, `tmp.pip-stripper.freeze.rpt` and  `tmp.pip-stripper.imports.rpt`, tracking pip packages and its best guesses at python imports, respectively.
 
 
-### Build.
+### Build (defaults to False)
 
 `--build` will take what it found in **pip-stripper.scan.yaml** and use it to populate 
 `requirements.prod.txt` and `requirements.dev.txt`.
 
 If you don't agree with what's in those requirements files, you may need to edit **pip-stripper.yaml**.
+
+####So, for example, you could initialize, scan and build in your current python directory with:
+
+`pipstripper --init --build`
+
 
 ## Editing `pip-stripper.yaml`
 

@@ -26,3 +26,12 @@ History
 ------------------
 
 * fixed packaging errors for README and version
+
+
+0.2.0 (2019-04-16)
+------------------
+
+* added `pipstripper` cli mode.
+* swapped --scan option for the more explicit --noscan
+* added more docstrings
+* README.md changes
