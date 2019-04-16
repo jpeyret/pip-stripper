@@ -1,4 +1,5 @@
 ![https://pypi.python.org/pypi/pip-stripper](https://img.shields.io/pypi/v/pip-stripper.svg)  ![https://travis-ci.org/jpeyret/pip-stripper](https://img.shields.io/travis/jpeyret/pip-stripper.svg) [![Coverage Status](https://coveralls.io/repos/github/jpeyret/pip-stripper/badge.svg?branch=master)](https://coveralls.io/github/jpeyret/pip-stripper?branch=master)
+[![Downloads](https://pepy.tech/badge/pip-stripper)](https://pepy.tech/project/pip-stripper)
 
 # TLDR:  requirements without *unnecessary* `pip` packages.
 

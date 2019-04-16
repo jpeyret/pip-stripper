@@ -12,7 +12,7 @@ from setuptools import setup, find_packages
 from os import path
 
 this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
+with open(path.join(this_directory, "README.md")) as f:
     long_description = f.read()
 
 with open("HISTORY.rst") as history_file:
@@ -57,6 +57,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/jpeyret/pip-stripper",
-    version="version='0.2.0'",
+    version="0.2.0",
     zip_safe=False,
 )
