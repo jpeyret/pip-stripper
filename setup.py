@@ -43,6 +43,10 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=requirements,
     license="MIT license",
+    package_data={
+        # And include any *.msg files found in the 'hello' package, too:
+        "templates": ["*"]
+    },
     # long_description=readme + "\n\n" + history,
     include_package_data=True,
     keywords="pip_stripper",
@@ -52,6 +56,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/jpeyret/pip-stripper",
-    version="version='0.1.7'",
+    version="0.1.7",
     zip_safe=False,
 )
