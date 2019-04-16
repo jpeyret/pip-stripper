@@ -226,7 +226,7 @@ Babel==2.6.0
 
 ````
 
-##Build Phase - the result of the `--scan` phase gets put into **pip-stripper.scan.yaml**:
+## Build Phase - the result of the `--scan` phase gets put into **pip-stripper.scan.yaml**:
 
 Notice our friend `black`?  We've explicitly classified it as *workstation*, so the scan didn't label it as *unknown*.
 
