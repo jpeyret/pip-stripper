@@ -52,6 +52,7 @@ setup(
     keywords="pip_stripper",
     name="pip_stripper",
     packages=find_packages(include=["pip_stripper"]),
+    entry_points={"console_scripts": ["pip-stripper = pip_stripper.__main__:main"]},
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
