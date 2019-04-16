@@ -5,10 +5,10 @@ include LICENSE
 include README.md
 
 recursive-include tests *
-recursive-include templates *
-recursive-include sample *
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
+recursive-include pip_stripper/templates *
+recursive-include sample *
