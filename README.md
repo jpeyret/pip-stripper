@@ -68,7 +68,7 @@ Instead:
 
 If you don't agree with what's in those requirements files, you may need to edit **pip-stripper.yaml**.
 
-####So, for example, you could initialize, scan and build in your current python directory with:
+#### For example, you could initialize, scan and build in your current python directory with:
 
 `pipstripper --init --build`
 
