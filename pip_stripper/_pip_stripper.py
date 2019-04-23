@@ -261,8 +261,8 @@ class Main(object):
         parser.add_argument(
             "--" + dest,
             action="store",
-            help="%s - will look for %s in --workdir, current directory "
-            % (dest, cls.FN_CONFIG),
+            help="config file. if not provided will look for %s in --workdir, current directory "
+            % (cls.FN_CONFIG),
         )
 
         dest = "noscan"
@@ -271,8 +271,8 @@ class Main(object):
             "--" + dest,
             default=default,
             action="store_true",
-            help="%s don't scan to classify packages --build will re-use existing pip-stripper.scan.yaml. [%s]. "
-            % (dest, default),
+            help="don't scan to classify packages. build phase will re-use existing pip-stripper.scan.yaml. [%s]. "
+            % (default),
         )
 
         dest = "build"
@@ -281,22 +281,23 @@ class Main(object):
             "--" + dest,
             default=default,
             action="store_true",
-            help="%s - read pip-stripper.scan.yaml to create requirements.prod/dev.txt [%s]"
-            % (dest, default),
+            help="read pip-stripper.scan.yaml to create requirements.prod/dev.txt [%s]"
+            % (default),
         )
 
         dest = "init"
         parser.add_argument(
             "--" + dest,
             action="store_true",
-            help="%s initialize the config file if it doesn't exist" % (dest),
+            help="initialize the config file (as %s) if it doesn't exist"
+            % (cls.FN_CONFIG),
         )
 
         dest = "workdir"
         parser.add_argument(
             "--" + dest,
             action="store",
-            help="%s [defaults to config's value or current directory]" % (dest),
+            help="work directory [defaults to config file's value or current directory]",
         )
 
         dest = "verbose"
@@ -305,7 +306,8 @@ class Main(object):
             "--" + dest,
             default=default,
             action="store_true",
-            help="%s [%s]" % (dest, default),
+            help="verbose mode.  adds extra zzz_debug: entry to pip-stripper.scan.yaml [%s]"
+            % (default),
         )
 
         return parser
@@ -314,9 +316,14 @@ class Main(object):
         """--init option handling"""
 
         try:
-            fnp_config = os.path.join(self.workdir, self.FN_CONFIG)
+            fnp_config = fnp_config or os.path.join(self.workdir, self.FN_CONFIG)
 
-            config = dict(coucou=1)
+            if os.path.isfile(fnp_config):
+                print(
+                    "pip-stripper configuration file exists already at  @ %s.  leaving it alone"
+                    % (fnp_config)
+                )
+                return fnp_config
 
             # load the template file
             fnp_template = os.path.join(self.DN, "templates/pip-stripper.yaml")
@@ -329,6 +336,7 @@ class Main(object):
                 fo.write(seed)
 
             print("pip-stripper configuration generated @ %s" % (fnp_config))
+            return fnp_config
 
         except (Exception,) as e:
             if cpdb():
