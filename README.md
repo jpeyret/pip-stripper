@@ -44,7 +44,7 @@ A linter and autoformatter has no need to be on a server:
 `pip-stripper` most likely won't find `import black` anywhere, so it will not put it in `requirements`
 
 
-##options
+## options
 
 ````
 usage: pipstripper [-h] [--config CONFIG] [--noscan] [--build] [--init]
