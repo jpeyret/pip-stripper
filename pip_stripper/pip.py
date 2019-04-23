@@ -73,6 +73,7 @@ class ClassifierPip(object):
 
     def run(self, packagetracker):
 
+        packagename_ = packagename = packagename_ = None
         try:
 
             di_packagename2pip = self.mgr.imp2pip
@@ -80,7 +81,6 @@ class ClassifierPip(object):
 
             self.s_missing_imports = all_imports.copy()
 
-            packagename = packagename_ = None
             pip2imp = self.mgr.pip2imp
 
             for pipname in self.mgr.all_pips:
