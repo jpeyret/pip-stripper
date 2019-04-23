@@ -3,50 +3,82 @@
 
 # TLDR:  requirements without *unnecessary* `pip` packages.
 
-
-
 ~~~
-For the purpose of this exercise, an unnecessary pip package is any package that is not being 
-imported by YOUR own Python code.  
+For the purpose of this exercise, an unnecessary pip package is any package 
+that is not being imported by YOUR own Python code.  
 Unless you've provided a configuration override stating that you want it.
 ~~~
 
-For example, let's say that you have installed `black 18.9b0`.  A linter and autoformatter, while very useful in development has no need to be on a server:
+## Simplest example: initialize, scan and build in current directory
 
-`pip-stripper` won't find `import black` anywhere, so it will not put it in `requirements`
+````
+$ pipstripper --init --build
+
+pip-stripper configuration generated @ sample/tst.seedworkdir01/pip-stripper.yaml
+
+build phase - generating requirements at:
+ sample/tst.seedworkdir01/requirements.dev.txt
+ sample/tst.seedworkdir01/requirements.txt
+
+$cat requirements.txt
+Django==2.2
+Jinja2==2.10.1
+celery==4.3.0
+cx-Oracle==6.4.1
+psycopg2==2.8.2
+python-dateutil==2.8.0
+
+$ cat requirements.dev.txt
+pyquery==1.4.0
+
+````
 
 
 
 # How it works
 
+
+Lots of your packages may not be needed.  Let's say you've installed `black 18.9b0`.  
+A linter and autoformatter has no need to be on a server:
+
+`pip-stripper` most likely won't find `import black` anywhere, so it will not put it in `requirements`
+
+
+## options
+
 ````
-usage: _pip_stripper.py [-h] [--config CONFIG] [--scan] [--build] [--init]
-                        [--workdir WORKDIR] [--verbose]
+usage: pipstripper [-h] [--config CONFIG] [--noscan] [--build] [--init]
+                   [--workdir WORKDIR] [--verbose]
 
 optional arguments:
   -h, --help         show this help message and exit
-  --config CONFIG    config - will look for pip-stripper.yaml in --workdir,
-                     current directory
-  --scan             scan scan python files and classify packages [True]
-  --build            build [False]
-  --init             init initialize the config file if it doesn't exist
-  --workdir WORKDIR  workdir [defaults to config's value or current directory]
-  --verbose          verbose [False]
+  --config CONFIG    config file. if not provided will look for pip-
+                     stripper.yaml in --workdir, current directory
+  --noscan           don't scan to classify packages. build phase will re-use
+                     existing pip-stripper.scan.yaml. [False].
+  --build            read pip-stripper.scan.yaml to create
+                     requirements.prod/dev.txt [False]
+  --init             initialize the config file (as pip-stripper.yaml) if it
+                     doesn't exist
+  --workdir WORKDIR  work directory [defaults to config file's value or
+                     current directory]
+  --verbose          verbose mode. adds extra zzz_debug: entry to pip-
+                     stripper.scan.yaml [False]
 ````
 
 ## Three phases, `initialization`, `scan` and `build`.
 
 
-### Initialization
+### Initialization (defaults to False)
 
 The first option `--init` will create **pip-stripper.yaml**, the configuration file for pip-stripper.
 
 **This is the only file you should edit manually!!!**
 
 
-### Scan
+### Scan phase (will run unless you specify `--noscan`)
 
-The second option, `--scan`, will scan your Python source files in `--workdir` and use it to create **pip-stripper.scan.yaml**.  
+This will scan your Python source files in `--workdir` and use it to create **pip-stripper.scan.yaml**.  
 
 This is the file that contains instructions for the build phase.  
 
@@ -56,15 +88,16 @@ Instead:
  - adjust the configuration in **pip-stripper.yaml**
  - re-run the scan
 
-`--scan` also creates 2 work files, `tmp.pip-stripper.freeze.rpt` and  `tmp.pip-stripper.imports.rpt`, tracking pip packages and its best guesses at python imports, respectively.
+Scanning also creates 2 work files, `tmp.pip-stripper.freeze.rpt` and  `tmp.pip-stripper.imports.rpt`, tracking pip packages and its best guesses at python imports, respectively.
 
 
-### Build.
+### Build (defaults to False)
 
-`--build` will take what it found in **pip-stripper.scan.yaml** and use it to populate 
-`requirements.prod.txt` and `requirements.dev.txt`.
+`--build` takes what it finds in **pip-stripper.scan.yaml** and uses it to populate 
+`requirements.txt` and `requirements.dev.txt`.
 
-If you don't agree with what's in those requirements files, you may need to edit **pip-stripper.yaml**.
+If those requirements files don't suit you, you may need to edit **pip-stripper.yaml**.
+
 
 ## Editing `pip-stripper.yaml`
 
@@ -219,7 +252,7 @@ Babel==2.6.0
 
 ````
 
-##Build Phase - the result of the `--scan` phase gets put into **pip-stripper.scan.yaml**:
+## Build Phase - the result of the `--scan` phase gets put into **pip-stripper.scan.yaml**:
 
 Notice our friend `black`?  We've explicitly classified it as *workstation*, so the scan didn't label it as *unknown*.
 
