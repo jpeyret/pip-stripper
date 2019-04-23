@@ -481,12 +481,13 @@ class TestMatchingBase(unittest.TestCase):
         "python-dateutil": "dateutil",
     }
 
+    # not exactly elegant but it'll have to do for now.
     for pipname, importname in zip(li_pip, li_imp):
         try:
             __import__(importname)
         except (Exception,) as e:
             try:
-                del exp[importname]
+                del exp[pipname]
             except (KeyError,) as e:
                 pass
 
