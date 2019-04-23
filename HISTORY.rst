@@ -35,3 +35,10 @@ History
 * swapped --scan option for the more explicit --noscan
 * added more docstrings
 * README.md changes
+  
+0.3.0 (2019-04-22)
+------------------
+* generating `requirements.txt` instead of `requirements.dev.txt`
+* improved pip package name to python import name matching, using `Module.pkg_resources`.
+* README.md changes
+* adjustments to argparse help text
