@@ -473,13 +473,22 @@ class TestPart(Base):
 class TestMatchingBase(unittest.TestCase):
 
     li_pip = ["cx-Oracle", "requests", "python-dateutil", "xxx"]
-    li_imp = ["dateutil", "cx_Oracle", "requests", "yyy"]
+    li_imp = ["cx_Oracle", "requests", "dateutil", "yyy"]
 
     exp = {
         "cx-Oracle": "cx_Oracle",
         "requests": "requests",
         "python-dateutil": "dateutil",
     }
+
+    for pipname, importname in zip(li_pip, li_imp):
+        try:
+            __import__(importname)
+        except (Exception,) as e:
+            try:
+                del exp[importname]
+            except (KeyError,) as e:
+                pass
 
     def __repr__(self):
         return self.__class__.__name__
@@ -581,6 +590,13 @@ class TestMatchingJinja(TestMatchingBase):
     li_imp = ["jinja2"]
 
     exp = {"Jinja2": "jinja2"}
+
+    # ok, now the problem is that if Jinja isn't pip-installed
+    # it won't show up...
+    try:
+        import jinja2
+    except (ImportError,) as e:
+        del exp["Jinja2"]
 
 
 if __name__ == "__main__":

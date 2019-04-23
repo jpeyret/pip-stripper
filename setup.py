@@ -22,7 +22,8 @@ requirements = ["PyYAML"]
 
 setup_requirements = []
 
-test_requirements = []
+# something lightweight
+test_requirements = ["requests", "python-dateutil"]
 
 setup(
     author="JL Peyret",
