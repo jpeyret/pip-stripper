@@ -30,8 +30,12 @@ class Builder(object):
             di_freeze = di_classifier["pips"]["freeze"]
 
             t_fn = self.config["t_filename_out"]
-            print("build phase - generating requirements at:")
+            print("\n\nbuild phase - generating requirements at:")
             for req, di in self.config["req_mapper"].items():
+
+                # pick up naming scheme from req, if present
+                t_fn = di.get("t_filename_out") or t_fn
+
                 fn_o = sub_template(t_fn, dict(req=req))
                 fnp_o = os.path.join(self.mgr.workdir, fn_o)
 
@@ -47,8 +51,9 @@ class Builder(object):
                 with open(fnp_o, "w") as fo:
                     for line in requirements:
                         fo.write("%s\n" % (line))
+                    fo.write("\n")
 
-                print("  %s" % (fnp_o))
+                print(" %s" % (fnp_o))
 
         except (Exception,) as e:
             if cpdb():

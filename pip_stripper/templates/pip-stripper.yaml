@@ -124,14 +124,8 @@ ClassifierImport:
       - tests
 
 
-##################
-# Note:  `pass` is used as a placeholder for actual package names
-##################
-
-untracked:
+untracked: []
   #replace with actual packages you don't want to track
-  - cStringIO # 2 to  3 changes, won't find it on 3
-  - urlparse  # 2 to  3 changes, won't find it on 3
 
 workdir: %(workdir)s
 
@@ -159,14 +153,11 @@ ClassifierPip:
     #dont put anything in unknown here...!
     unknown: []
 
-    workstation:
+    workstation: []
       # mostly modules that are used to develop/audit even if they dont
       # show up in the source code:
       # so you may have installed say `ansible` to build servers, but it makes
       # no sense to install `ansible` on those servers
-      - pass 
-      - PyQt5
-      - PyQt5-sip
 
     prod:
       # enter packages that you _know_ you want to put in `requirements.prod.txt` but are not
@@ -183,12 +174,12 @@ ClassifierPip:
       # same...
 
 hardcoded_aliases:
-  #put in matches in the form...
-  #pip package name : import name
-  backports.functools-lru-cache: backports.functools_lru_cache
-  cached-property: cached_property
-  cx-Oracle: cx_Oracle
+  #if you run pipstripper --verbose, it will deposit debugging info in `pip-stripper.scan.yaml`
+  #under `zzz_debug`, i.e. at end of the file.
+  #check out the zzz_debug:unknown_pip_aliases section.  things that are in there won't be matched
+  #for now
   PyYAML: yaml
+  django-webpack-loader: webpack_loader
 
 Builder:
 
@@ -200,6 +191,7 @@ Builder:
         - dev
         - tests
     prod:
+      t_filename_out: "requirements.txt"      
       buckets:
         - prod
 

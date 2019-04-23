@@ -62,7 +62,7 @@ class ScanWriter(object):
 
             pips = dict(buckets=pips_buckets, freeze=self.mgr.all_freezes)
 
-            warnings = self.mgr.pip_classifier.warnings
+            warnings = sorted(self.mgr.pip_classifier.warnings)
 
             di = self.di = dict(
                 import_="comment_lookup_imports",
@@ -78,6 +78,7 @@ class ScanWriter(object):
                     stdlib=sorted(self.mgr.s_stdlib),
                     all_imports=sorted(self.mgr.all_imports),
                     all_pips=sorted(self.mgr.all_pips),
+                    unknown_pip_aliases=self.mgr.matcher._debug,
                 )
                 di["zzz_debug"] = di_debug
 
@@ -89,7 +90,7 @@ class ScanWriter(object):
 
             commenter.comment(fnp_tmp, self.fnp_yaml)
 
-            print("pipstripper scan written to %s" % (self.fnp_yaml))
+            print("\n\nscan written to %s" % (self.fnp_yaml))
 
         except (Exception,) as e:
             if cpdb():
